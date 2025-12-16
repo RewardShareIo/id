@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Riwayat Transaksi - RewardShareIo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .history-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 10px;
+        }
+        .tab {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+        .tab.active {
+            background: rgba(16, 185, 129, 0.1);
+            color: #10B981;
+            font-weight: 500;
+        }
+        .history-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            border-left: 4px solid;
+        }
+        .history-deposit { border-color: #3B82F6; }
+        .history-withdraw { border-color: #10B981; }
+        .history-task { border-color: #F59E0B; }
+        .history-referral { border-color: #8B5CF6; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">RewardShare<span class="text-primary">Io</span></div>
+        <a href="dashboard.html" class="btn btn-outline">← Dashboard</a>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2>Riwayat Transaksi</h2>
+            <p class="text-muted">Semua aktivitas keuangan Anda</p>
+            
+            <div class="history-tabs">
+                <button class="tab active" onclick="showTab('all')">Semua</button>
+                <button class="tab" onclick="showTab('deposit')">Deposit</button>
+                <button class="tab" onclick="showTab('withdraw')">Penarikan</button>
+                <button class="tab" onclick="showTab('task')">Task</button>
+                <button class="tab" onclick="showTab('referral')">Referral</button>
+            </div>
+            
+            <div id="historyContent">
+                <p class="text-muted center">Memuat riwayat...</p>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="history.js"></script>
+</body>
+</html>

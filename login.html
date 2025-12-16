@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Login – RewardShareIo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .login-container {
+      display: flex;
+      justify-content: center;
+      padding: 50px 20px;
+      min-height: 80vh;
+    }
+    .card {
+      max-width: 400px;
+      width: 100%;
+      padding: 30px;
+    }
+    .input { width:100%; padding:10px; margin-bottom:15px; }
+    .btn { width:100%; padding:12px; margin-top:10px; cursor:pointer; }
+    .text-danger { color:red; text-align:center; margin-top:10px; }
+    .link-text { text-align:center; margin-top:15px; }
+    .link-text a { color:#007bff; text-decoration:none; cursor:pointer; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">RewardShare<span class="text-primary">Io</span></div>
+</div>
+
+<div class="login-container">
+  <div class="card">
+    <h2>Login</h2>
+    <p class="text-muted">ㅤ</p>
+    <input id="loginEmail" type="email" class="input" placeholder="Email">
+    <input id="loginPassword" type="password" class="input" placeholder="Kata Sandi">
+    <button class="btn btn-primary" onclick="login()">Login</button>
+    <p id="loginMsg" class="text-danger"></p>
+    <div class="link-text">
+      Belum punya akun? <a href="register.html">Daftar</a>
+    </div>
+  </div>
+</div>
+
+<div class="footer">© 2025 RewardShareIo</div>
+
+<script type="module" src="firebase.js"></script>
+<script type="module" src="login.js"></script>
+</body>
+</html>

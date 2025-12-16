@@ -1,0 +1,660 @@
+<!-- file name: admin.html -->
+<!-- file content begin -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel – RewardShareIo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ADMIN SPECIFIC STYLES */
+    .admin-header {
+      background: linear-gradient(135deg, #1e293b, #0f172a);
+      border-bottom: 3px solid var(--primary-sky);
+    }
+    .admin-nav {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 4px;
+      background: var(--bg-secondary);
+      border-radius: var(--border-radius-sm);
+      padding: 4px;
+      margin-bottom: var(--space-lg);
+    }
+    .nav-btn {
+      padding: var(--space-md);
+      background: transparent;
+      border: none;
+      border-radius: var(--border-radius-sm);
+      cursor: pointer;
+      font-weight: 600;
+      text-align: center;
+      transition: all var(--transition-fast);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 80px;
+    }
+    .nav-btn:hover {
+      background: rgba(255,255,255,0.05);
+    }
+    .nav-btn.active {
+      background: var(--primary-sky);
+      color: white;
+    }
+    .nav-icon {
+      font-size: 1.5rem;
+      margin-bottom: 5px;
+    }
+    .nav-text {
+      font-size: 0.9rem;
+    }
+    .badge-nav {
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      background: var(--warning);
+      color: white;
+      border-radius: 50%;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: bold;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    /* Dashboard Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: var(--space-md);
+      margin: var(--space-lg) 0;
+    }
+    .stat-card {
+      background: var(--bg-card);
+      padding: var(--space-lg);
+      border-radius: var(--border-radius);
+      text-align: center;
+      border: 1px solid var(--border-color);
+      transition: all var(--transition-normal);
+    }
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow);
+    }
+    .stat-value {
+      font-size: var(--text-3xl);
+      font-weight: bold;
+      margin: var(--space-sm) 0;
+    }
+    /* Pending Items */
+    .pending-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-md);
+      background: var(--bg-card);
+      border-radius: var(--border-radius-sm);
+      margin-bottom: var(--space-sm);
+      border-left: 4px solid var(--warning);
+      transition: all var(--transition-fast);
+    }
+    .pending-item:hover {
+      background: var(--bg-hover);
+    }
+    .action-buttons {
+      display: flex;
+      gap: var(--space-sm);
+    }
+    /* Method Cards */
+    .method-card-admin {
+      background: var(--bg-card);
+      border: 2px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-md);
+      position: relative;
+    }
+    .method-card-admin.active {
+      border-color: var(--success);
+    }
+    .method-card-admin.inactive {
+      border-color: var(--danger);
+      opacity: 0.7;
+    }
+    .method-status {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: var(--text-xs);
+      font-weight: bold;
+    }
+    .status-active {
+      background: rgba(52, 211, 153, 0.2);
+      color: var(--success);
+    }
+    .status-inactive {
+      background: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+    }
+    /* Modal */
+    .modal-lg {
+      max-width: 800px;
+    }
+    /* Search & Filter */
+    .search-box {
+      margin-bottom: var(--space-lg);
+    }
+    /* Task Cards */
+    .task-card-admin {
+      background: var(--bg-card);
+      border-radius: var(--border-radius);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-md);
+      border: 1px solid var(--border-color);
+    }
+    .task-status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: var(--text-xs);
+      font-weight: bold;
+      margin-left: var(--space-sm);
+    }
+    .status-pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
+    .status-approved { background: rgba(52, 211, 153, 0.2); color: var(--success); }
+    .status-rejected { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+  </style>
+</head>
+<body>
+
+<!-- ADMIN HEADER -->
+<div class="header admin-header">
+  <div class="logo">RewardShare<span class="text-primary">Io</span> <small style="font-size: 0.8rem; color: var(--primary-sky);">ADMIN PANEL</small></div>
+  <div style="display: flex; align-items: center; gap: var(--space-md);">
+    <span id="adminEmail" style="font-size: 0.9rem; color: var(--gray);"></span>
+    <a href="dashboard.html" class="btn btn-sm btn-outline">← User View</a>
+    <button id="logoutBtn" class="btn btn-sm btn-danger">Logout</button>
+  </div>
+</div>
+
+<div class="container">
+  
+  <!-- ADMIN NAVIGATION - 9 MENU TERPISAH -->
+  <div class="admin-nav">
+    <!-- Dashboard -->
+    <button class="nav-btn active" onclick="showTab('dashboard')">
+      <div class="nav-icon">📊</div>
+      <div class="nav-text">Dashboard</div>
+    </button>
+    
+    <!-- Payment Methods -->
+    <button class="nav-btn" onclick="showTab('payment-methods')">
+      <div class="nav-icon">🏦</div>
+      <div class="nav-text">Payment Methods</div>
+    </button>
+    
+    <!-- Approve Deposits -->
+    <button class="nav-btn" onclick="showTab('approve-deposits')">
+      <div class="nav-icon">💰</div>
+      <div class="nav-text">Approve Deposits</div>
+      <div id="depositBadge" class="badge-nav" style="display: none;">0</div>
+    </button>
+    
+    <!-- 🏢 APPROVE ADVERTISER TASKS (BARU) -->
+    <button class="nav-btn" onclick="showTab('approve-advertiser-tasks')">
+      <div class="nav-icon">🏢</div>
+      <div class="nav-text">Approve Advertiser Tasks</div>
+      <div id="advertiserTaskBadge" class="badge-nav" style="display: none;">0</div>
+    </button>
+    
+    <!-- 🚀 CREATE ADMIN TASK (BARU) -->
+    <button class="nav-btn" onclick="showTab('create-admin-task')">
+      <div class="nav-icon">🚀</div>
+      <div class="nav-text">Create Admin Task</div>
+    </button>
+    
+    <!-- ✅ APPROVE USER PROOFS (RENAMED) -->
+    <button class="nav-btn" onclick="showTab('approve-user-proofs')">
+      <div class="nav-icon">✅</div>
+      <div class="nav-text">Approve User Proofs</div>
+      <div id="userProofBadge" class="badge-nav" style="display: none;">0</div>
+    </button>
+    
+    <!-- Approve Withdraw -->
+    <button class="nav-btn" onclick="showTab('approve-withdraw')">
+      <div class="nav-icon">💸</div>
+      <div class="nav-text">Approve Withdraw</div>
+      <div id="withdrawBadge" class="badge-nav" style="display: none;">0</div>
+    </button>
+    
+    <!-- User Management -->
+    <button class="nav-btn" onclick="showTab('user-management')">
+      <div class="nav-icon">👥</div>
+      <div class="nav-text">User Management</div>
+    </button>
+    
+    <!-- System Logs -->
+    <button class="nav-btn" onclick="showTab('system-logs')">
+      <div class="nav-icon">📜</div>
+      <div class="nav-text">System Logs</div>
+    </button>
+  </div>
+
+  <!-- ==================== TAB 1: DASHBOARD ==================== -->
+  <div id="dashboard" class="tab-content active">
+    <div class="card">
+      <h2 class="card-title">📊 Admin Dashboard</h2>
+      <p class="text-muted">Overview sistem RewardShareIo - Real-time monitoring</p>
+      
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Users</div>
+          <div class="stat-value text-primary" id="totalUsers">0</div>
+          <div class="text-muted"><span id="activeUsers">0</span> aktif</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Balance</div>
+          <div class="stat-value text-success" id="totalBalance">Rp0</div>
+          <div class="text-muted"><span id="lockedBalance">Rp0</span> terkunci</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pending Actions</div>
+          <div class="stat-value text-warning" id="totalPending">0</div>
+          <div class="text-muted">Perlu review</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Tasks</div>
+          <div class="stat-value text-lavender" id="totalTasksAdmin">0</div>
+          <div class="text-muted"><span id="activeTasks">0</span> aktif</div>
+        </div>
+      </div>
+
+      <!-- PENDING ACTIONS QUICK VIEW -->
+      <div style="margin-top: var(--space-xl);">
+        <h3>⏳ Pending Actions - Quick Review</h3>
+        
+        <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: var(--space-md); margin-top: var(--space-md);">
+          <!-- Pending Deposits -->
+          <div class="card">
+            <h4>💰 Deposits (<span id="pendingDepositsCount">0</span>)</h4>
+            <div id="pendingDepositsQuick">
+              <p class="text-muted">Memuat...</p>
+            </div>
+            <button onclick="showTab('approve-deposits')" class="btn btn-sm btn-outline" style="width: 100%; margin-top: var(--space-sm);">
+              Lihat Semua →
+            </button>
+          </div>
+          
+          <!-- Pending Advertiser Tasks -->
+          <div class="card">
+            <h4>🏢 Advertiser Tasks (<span id="pendingAdvertiserTasksCount">0</span>)</h4>
+            <div id="pendingAdvertiserTasksQuick">
+              <p class="text-muted">Memuat...</p>
+            </div>
+            <button onclick="showTab('approve-advertiser-tasks')" class="btn btn-sm btn-outline" style="width: 100%; margin-top: var(--space-sm);">
+              Lihat Semua →
+            </button>
+          </div>
+          
+          <!-- Pending User Proofs -->
+          <div class="card">
+            <h4>✅ User Proofs (<span id="pendingUserProofsCount">0</span>)</h4>
+            <div id="pendingUserProofsQuick">
+              <p class="text-muted">Memuat...</p>
+            </div>
+            <button onclick="showTab('approve-user-proofs')" class="btn btn-sm btn-outline" style="width: 100%; margin-top: var(--space-sm);">
+              Lihat Semua →
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 2: PAYMENT METHODS ==================== -->
+  <div id="payment-methods" class="tab-content">
+    <div class="card">
+      <h2 class="card-title">🏦 Kelola Metode Pembayaran</h2>
+      <p class="text-muted">Tambah, edit, atau nonaktifkan metode deposit yang tersedia untuk user.</p>
+      
+      <div style="display: flex; justify-content: space-between; align-items: center; margin: var(--space-xl) 0;">
+        <h3>Metode Tersedia</h3>
+        <button onclick="showAddMethodModal()" class="btn btn-primary">
+          <span style="font-size: 1.2rem;">+</span> Tambah Metode Baru
+        </button>
+      </div>
+      
+      <div id="methodsContainer">
+        <div class="empty-state" style="text-align: center; padding: var(--space-2xl);">
+          <div style="font-size: 3rem; margin-bottom: var(--space-md);">🏦</div>
+          <h3>Belum ada metode pembayaran</h3>
+          <p class="text-muted">Tambahkan metode pertama untuk memulai</p>
+          <button onclick="showAddMethodModal()" class="btn btn-primary">+ Tambah Metode</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 3: APPROVE DEPOSITS ==================== -->
+  <div id="approve-deposits" class="tab-content">
+    <div class="card">
+      <h2 class="card-title">💰 Approve Deposits</h2>
+      <p class="text-muted">Review dan approve/reject deposit dari user.</p>
+      
+      <div style="display: flex; gap: var(--space-md); margin-bottom: var(--space-lg);">
+        <input type="text" id="searchDeposit" class="input" placeholder="Cari kode deposit, email, atau nama..." style="flex: 1;">
+        <select id="filterDepositStatus" class="input" style="width: 150px;">
+          <option value="pending">Pending</option>
+          <option value="all">Semua Status</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <button onclick="loadPendingDeposits()" class="btn btn-primary">🔍 Filter</button>
+      </div>
+      
+      <div id="depositsContainer">
+        <div class="empty-state" style="text-align: center; padding: var(--space-2xl);">
+          <div style="font-size: 3rem; margin-bottom: var(--space-md);">✅</div>
+          <h3>Tidak ada deposit pending</h3>
+          <p class="text-muted">Semua deposit sudah diproses</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 4: APPROVE ADVERTISER TASKS ==================== -->
+  <div id="approve-advertiser-tasks" class="tab-content">
+    <div class="card">
+      <h2 class="card-title">🏢 Approve Advertiser Tasks</h2>
+      <p class="text-muted">Review dan approve/reject task yang dibuat oleh advertiser (user yang deposit ≥ 50k).</p>
+      
+      <div id="advertiserTasksContainer">
+        <div class="empty-state" style="text-align: center; padding: var(--space-2xl);">
+          <div style="font-size: 3rem; margin-bottom: var(--space-md);">🏢</div>
+          <h3>Tidak ada task advertiser pending</h3>
+          <p class="text-muted">Semua task dari advertiser sudah diproses</p>
+          <p class="text-muted" style="font-size: 0.9rem; margin-top: var(--space-sm);">
+            Advertiser dapat membuat task melalui menu "Buat Task" di dashboard user
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 5: CREATE ADMIN TASK ==================== -->
+  <div id="create-admin-task" class="tab-content">
+    <div class="card">
+      <h2 class="card-title">🚀 Create Admin Task</h2>
+      <p class="text-muted">Buat task langsung sebagai admin. Task ini otomatis aktif tanpa perlu approval.</p>
+      
+      <div style="max-width: 600px; margin: 0 auto;">
+        <!-- Task Creation Form -->
+        <div style="margin-bottom: var(--space-lg);">
+          <label class="input-label">Judul Task*</label>
+          <input type="text" id="adminTaskTitle" class="input" placeholder="Contoh: Follow Instagram @rewardshareio">
+          
+          <label class="input-label" style="margin-top: var(--space-md);">Deskripsi</label>
+          <textarea id="adminTaskDescription" class="input" rows="2" placeholder="Jelaskan task secara singkat..."></textarea>
+          
+          <label class="input-label" style="margin-top: var(--space-md);">Instruksi Detail*</label>
+          <textarea id="adminTaskInstructions" class="input" rows="4" placeholder="Tulis instruksi lengkap untuk user..."></textarea>
+          
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-md); margin-top: var(--space-md);">
+            <div>
+              <label class="input-label">Jenis Task*</label>
+              <select id="adminTaskType" class="input">
+                <option value="follow">Follow/Subscribe</option>
+                <option value="like">Like/Comment</option>
+                <option value="share">Share/Repost</option>
+                <option value="download">Download/Install</option>
+                <option value="review">Review/Testimoni</option>
+                <option value="custom">Custom Task</option>
+              </select>
+            </div>
+            <div>
+              <label class="input-label">Reward per User*</label>
+              <input type="number" id="adminTaskReward" class="input" placeholder="1000" min="500" step="500">
+            </div>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--space-md); margin-top: var(--space-md);">
+            <div>
+              <label class="input-label">Jumlah Slot*</label>
+              <input type="number" id="adminTaskSlots" class="input" placeholder="50" min="1" max="1000">
+            </div>
+            <div>
+              <label class="input-label">Link (Opsional)</label>
+              <input type="url" id="adminTaskLink" class="input" placeholder="https://...">
+            </div>
+          </div>
+          
+          <div style="margin-top: var(--space-md);">
+            <label class="input-label">Durasi Estimasi (Opsional)</label>
+            <input type="text" id="adminTaskDuration" class="input" placeholder="Contoh: 5-10 menit">
+          </div>
+          
+          <div style="margin-top: var(--space-md);">
+            <label class="input-label">Catatan Internal (Opsional)</label>
+            <textarea id="adminTaskNotes" class="input" rows="2" placeholder="Catatan untuk tim admin..."></textarea>
+          </div>
+        </div>
+        
+        <div style="display: flex; gap: var(--space-md);">
+          <button onclick="createAdminTask()" class="btn btn-primary btn-lg" style="flex: 1;">
+            🚀 Publikasikan Task
+          </button>
+          <button onclick="previewAdminTask()" class="btn btn-outline">
+            👁️ Preview
+          </button>
+        </div>
+        <p id="adminTaskMessage" class="text-danger" style="text-align: center; margin-top: var(--space-md);"></p>
+        
+        <!-- Recent Admin Tasks -->
+        <div style="margin-top: var(--space-2xl);">
+          <h3>📋 Task Admin Terbaru</h3>
+          <div id="recentAdminTasks">
+            <p class="text-muted">Memuat task admin terbaru...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 6: APPROVE USER PROOFS ==================== -->
+  <div id="approve-user-proofs" class="tab-content">
+    <div class="card">
+      <h2 class="card-title">✅ Approve User Proofs</h2>
+      <p class="text-muted">Review bukti task yang diupload user (follow, like, download, dll).</p>
+      
+      <div style="display: flex; gap: var(--space-md); margin-bottom: var(--space-lg);">
+        <select id="filterProofType" class="input" style="flex: 1;">
+          <option value="">Semua Jenis Task</option>
+          <option value="follow">Follow/Subscribe</option>
+          <option value="like">Like/Comment</option>
+          <option value="share">Share/Repost</option>
+          <option value="download">Download/Install</option>
+          <option value="review">Review/Testimoni</option>
+        </select>
+        <select id="filterProofStatus" class="input" style="width: 150px;">
+          <option value="pending">Pending</option>
+          <option value="all">Semua Status</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+        <button onclick="loadPendingUserProofs()" class="btn btn-primary">🔍 Filter</button>
+      </div>
+      
+      <div id="userProofsContainer">
+        <div class="empty-state" style="text-align: center; padding: var(--space-2xl);">
+          <div style="font-size: 3rem; margin-bottom: var(--space-md);">📝</div>
+          <h3>Tidak ada bukti task pending</h3>
+          <p class="text-muted">Semua bukti task sudah direview</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 7: APPROVE WITHDRAW ==================== -->
+  <div id="approve-withdraw" class="tab-content">
+    <div class="card">
+      <h2 class="card-title">💸 Approve Withdrawals</h2>
+      <p class="text-muted">Review dan proses permintaan penarikan saldo user.</p>
+      
+      <div id="withdrawalsContainer">
+        <div class="empty-state" style="text-align: center; padding: var(--space-2xl);">
+          <div style="font-size: 3rem; margin-bottom: var(--space-md);">💰</div>
+          <h3>Tidak ada withdraw pending</h3>
+          <p class="text-muted">Semua permintaan penarikan sudah diproses</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 8: USER MANAGEMENT ==================== -->
+  <div id="user-management" class="tab-content">
+    <div class="card">
+      <h2 class="card-title">👥 User Management</h2>
+      <p class="text-muted">Kelola semua user, lihat detail, dan atur role.</p>
+      
+      <div style="display: flex; gap: var(--space-md); margin-bottom: var(--space-lg);">
+        <input type="text" id="searchUser" class="input" placeholder="Cari user berdasarkan email, username, atau UID..." style="flex: 1;">
+        <select id="filterUserRole" class="input" style="width: 150px;">
+          <option value="all">Semua Role</option>
+          <option value="user">User</option>
+          <option value="advertiser">Advertiser</option>
+          <option value="admin">Admin</option>
+        </select>
+        <button onclick="searchUsers()" class="btn btn-primary">🔍 Cari</button>
+      </div>
+      
+      <div id="usersContainer">
+        <div class="empty-state" style="text-align: center; padding: var(--space-2xl);">
+          <div style="font-size: 3rem; margin-bottom: var(--space-md);">👤</div>
+          <h3>Memuat data user...</h3>
+          <p class="text-muted">Sedang mengambil data dari database</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TAB 9: SYSTEM LOGS ==================== -->
+  <div id="system-logs" class="tab-content">
+    <div class="card">
+      <h2 class="card-title">📜 System Logs</h2>
+      <p class="text-muted">Log aktivitas sistem dan tindakan admin.</p>
+      
+      <div style="display: flex; gap: var(--space-md); margin-bottom: var(--space-lg);">
+        <select id="filterLogType" class="input" style="flex: 1;">
+          <option value="all">Semua Tipe</option>
+          <option value="deposit">Deposit</option>
+          <option value="withdraw">Withdraw</option>
+          <option value="task">Task</option>
+          <option value="user">User</option>
+          <option value="system">System</option>
+        </select>
+        <input type="date" id="filterLogDate" class="input" style="width: 150px;">
+        <button onclick="loadSystemLogs()" class="btn btn-primary">🔍 Filter</button>
+        <button onclick="exportLogs()" class="btn btn-outline">📥 Export</button>
+      </div>
+      
+      <div id="logsContainer">
+        <div class="empty-state" style="text-align: center; padding: var(--space-2xl);">
+          <div style="font-size: 3rem; margin-bottom: var(--space-md);">📄</div>
+          <h3>Belum ada log sistem</h3>
+          <p class="text-muted">Log akan muncul saat ada aktivitas di sistem</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL: ADD/EDIT PAYMENT METHOD -->
+<div id="methodModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="methodModalTitle">Tambah Metode Pembayaran</h2>
+      <button class="modal-close" onclick="closeModal('methodModal')">&times;</button>
+    </div>
+    
+    <div style="margin-bottom: var(--space-lg);">
+      <label class="input-label">Nama Metode*</label>
+      <input type="text" id="methodName" class="input" placeholder="Contoh: BCA, DANA, OVO">
+      
+      <label class="input-label" style="margin-top: var(--space-md);">Tipe*</label>
+      <select id="methodType" class="input">
+        <option value="bank">Bank Transfer</option>
+        <option value="ewallet">E-Wallet</option>
+        <option value="virtual_account">Virtual Account</option>
+        <option value="other">Lainnya</option>
+      </select>
+      
+      <label class="input-label" style="margin-top: var(--space-md);">Nama Pemilik Rekening*</label>
+      <input type="text" id="methodHolder" class="input" placeholder="Contoh: ADMIN REWARDSHAREIO">
+      
+      <label class="input-label" style="margin-top: var(--space-md);">Nomor Rekening/E-Wallet*</label>
+      <input type="text" id="methodNumber" class="input" placeholder="Contoh: 1234567890">
+      
+      <label class="input-label" style="margin-top: var(--space-md);">Kode/Icon (Opsional)</label>
+      <input type="text" id="methodIcon" class="input" placeholder="Contoh: 🏦, 💜, 🔵">
+      
+      <label class="input-label" style="margin-top: var(--space-md);">Instruksi Tambahan (Opsional)</label>
+      <textarea id="methodInstructions" class="input" rows="3" placeholder="Contoh: Transfer dengan berita: DEPOSIT_[KODE_USER]"></textarea>
+      
+      <div style="display: flex; gap: var(--space-md); margin-top: var(--space-md);">
+        <label style="flex: 1; display: flex; align-items: center; gap: var(--space-sm);">
+          <input type="checkbox" id="methodActive" checked>
+          <span>Aktif (tampilkan ke user)</span>
+        </label>
+      </div>
+    </div>
+    
+    <div style="display: flex; gap: var(--space-md);">
+      <button onclick="savePaymentMethod()" class="btn btn-primary btn-full">💾 Simpan Metode</button>
+      <button onclick="closeModal('methodModal')" class="btn btn-outline">Batal</button>
+    </div>
+    <p id="methodMessage" class="text-danger" style="text-align: center; margin-top: var(--space-md);"></p>
+  </div>
+</div>
+
+<!-- MODAL: PREVIEW TASK -->
+<div id="previewTaskModal" class="modal">
+  <div class="modal-content modal-lg">
+    <div class="modal-header">
+      <h2>👁️ Preview Task</h2>
+      <button class="modal-close" onclick="closeModal('previewTaskModal')">&times;</button>
+    </div>
+    
+    <div id="previewTaskContent">
+      <!-- Konten preview akan dimuat di sini -->
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  © 2025 RewardShareIo · Admin Panel v1.0 · <span id="currentTime"></span>
+</div>
+
+<!-- SCRIPTS -->
+<script type="module" src="admin.js"></script>
+</body>
+</html>
+<!-- file content end -->

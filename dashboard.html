@@ -1,0 +1,300 @@
+<!-- file name: dashboard.html -->
+<!-- file content begin -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard – RewardShareIo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .balance-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+    .balance-item {
+      background-color: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .balance-value {
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin: 5px 0;
+    }
+    .menu-icon {
+      font-size: 1.8rem;
+      margin-bottom: 10px;
+      display: block;
+    }
+    .menu-item {
+      min-height: 100px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .menu-item:hover {
+      transform: translateY(-5px);
+      border-color: var(--primary);
+      background-color: rgba(16, 185, 129, 0.1);
+    }
+    .referral-code {
+      background-color: rgba(16, 185, 129, 0.1);
+      border: 1px dashed var(--primary);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      margin: 20px 0;
+    }
+    .referral-code span {
+      font-family: monospace;
+      font-size: 1.3rem;
+      color: var(--primary);
+      display: block;
+      margin: 10px 0;
+      letter-spacing: 1px;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background-color: var(--dark);
+      border-radius: 15px;
+      padding: 25px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--gray);
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">RewardShare<span class="text-primary">Io</span></div>
+  <div class="header-user-info">
+    <!-- Kode Referral User -->
+    <div id="userRefCode" class="user-ref-code" 
+         onclick="copyReferralFromHeader()"
+         title="Klik untuk salin kode referral">
+      <span class="ref-label">REF:</span>
+      <span>LOADING...</span>
+    </div>
+    
+    <!-- Logout Button -->
+    <button id="logoutBtn" class="btn btn-sm btn-outline">
+      <span style="font-size: 1.1rem;"></span> Keluar
+    </button>
+  </div>
+</div>
+
+<!-- DASHBOARD CONTENT -->
+<div class="container">
+  
+  <!-- SALDO UTAMA -->
+  <div class="balance-card">
+    <div class="balance-label">Saldo Utama</div>
+    <div class="balance-amount">Rp <span id="mainBalance">0</span></div>
+    <div style="display: flex; gap: 10px; margin-top: 15px;">
+      <button onclick="showModal('depositModal')" class="btn btn-outline">Deposit</button>
+      <button onclick="showModal('withdrawModal')" class="btn btn-outline">Tarik</button>
+    </div>
+  </div>
+
+  <!-- STATISTIK CEPAT -->
+  <div class="balance-grid">
+    <div class="balance-item">
+      <div class="balance-label">Referral</div>
+      <div class="balance-value text-primary">Rp <span id="referralBalance">0</span></div>
+    </div>
+  </div>
+
+  <!-- REFERRAL CODE -->
+  <div class="referral-code">
+    <div class="balance-label"> Kode Referral Kamu</div>
+    <span id="userReferralCode">LOADING...</span>
+    <button onclick="copyReferral()" class="btn btn-sm btn-primary"> Salin Kode</button>
+    <small style="display: block; margin-top: 10px; color: var(--gray);">
+      Dapatkan <strong class="text-success">Rp250</strong> setiap ada user baru yang daftar menggunakan kode ini
+    </small>
+  </div>
+
+  <!-- MENU UTAMA -->
+  <div class="menu-grid">
+    <div class="menu-item" onclick="handleCheckIn()">
+      <div class="menu-icon"></div>
+      <div class="menu-text">Check-in Harian</div>
+      <small class="text-muted">Rp150/hari</small>
+      <small id="checkinStatus" class="text-success" style="margin-top: 5px; font-size: 0.8rem;"></small>
+    </div>
+    <div class="menu-item" onclick="window.location.href='tasks.html'">
+      <div class="menu-icon"></div>
+      <div class="menu-text">Task Tersedia</div>
+      <small class="text-muted">Kerjakan & dapatkan reward</small>
+    </div>
+    <div class="menu-item" onclick="window.location.href='my-tasks.html'">
+      <div class="menu-icon"></div>
+      <div class="menu-text">Task Saya</div>
+      <small class="text-muted">Riwayat & pending</small>
+    </div>
+    <div class="menu-item" onclick="showModal('referralModal')">
+      <div class="menu-icon"></div>
+      <div class="menu-text">Referral</div>
+      <small class="text-muted">Lihat referral & leaderboard</small>
+    </div>
+    <div class="menu-item" onclick="window.location.href='deposit.html'">
+      <div class="menu-icon"></div>
+      <div class="menu-text">Deposit</div>
+      <small class="text-muted">Min. Rp30.000</small>
+    </div>
+    <div class="menu-item" onclick="window.location.href='withdraw.html'">
+      <div class="menu-icon"></div>
+      <div class="menu-text">Penarikan</div>
+      <small class="text-muted">Min. Rp30.000</small>
+    </div>
+    <div class="menu-item" onclick="window.location.href='history.html'">
+      <div class="menu-icon"></div>
+      <div class="menu-text">History</div>
+      <small class="text-muted">Riwayat transaksi</small>
+    </div>
+    <div class="menu-item" onclick="checkAdvertiserEligibility()">
+      <div class="menu-icon"></div>
+      <div class="menu-text">Buat Task</div>
+      <small class="text-muted">Jadi advertiser</small>
+    </div>
+  </div>
+
+  <!-- TASK TERBARU -->
+  <div class="card">
+    <h2 class="card-title"> Task Terbaru</h2>
+    <div id="latestTasks">
+      <p class="text-muted">Memuat task...</p>
+    </div>
+    <button onclick="window.location.href='tasks.html'" class="btn btn-outline" style="margin-top: 15px;">
+      Lihat Semua Task 
+    </button>
+  </div>
+
+  <!-- REFERRAL TERBARU -->
+  <div class="card">
+    <h2 class="card-title"> Referral Terbaru</h2>
+    <div id="latestReferrals">
+      <p class="text-muted">Memuat referral...</p>
+    </div>
+    <button onclick="showModal('referralModal')" class="btn btn-outline" style="margin-top: 15px;">
+      Lihat Detail Referral 
+    </button>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  © 2025 RewardShareIo · <small style="color: var(--gray);">Saldo: <span id="footerBalance">Rp0</span></small>
+</div>
+
+<!-- MODAL REFERRAL -->
+<div id="referralModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2> Program Referral</h2>
+      <button class="modal-close" onclick="closeModal('referralModal')">&times;</button>
+    </div>
+    
+    <div class="referral-code" style="margin: 20px 0;">
+      <div style="font-size: 0.9rem; margin-bottom: 5px; color: var(--gray);">Kode Referral:</div>
+      <span id="modalReferralCode">LOADING...</span>
+      <button onclick="copyReferral()" class="btn btn-sm btn-primary" style="margin-top: 10px;"> Salin Kode</button>
+    </div>
+    
+    <div style="margin: 20px 0; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+      <h4>Link Referral:</h4>
+      <div style="display: flex; gap: 10px; margin-top: 10px;">
+        <input type="text" id="referralLink" class="input" readonly style="flex: 1; font-size: 0.9rem;">
+        <button onclick="copyReferralLink()" class="btn btn-sm btn-secondary">Salin</button>
+      </div>
+    </div>
+    
+    <div style="margin: 20px 0;">
+      <h4> Statistik Referral</h4>
+      <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; margin-top: 10px;">
+        <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+          <div style="font-size: 0.9rem; color: var(--gray);">Total Referral</div>
+          <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);" id="totalReferrals">0</div>
+        </div>
+        <div style="text-align: center; padding: 10px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+          <div style="font-size: 0.9rem; color: var(--gray);">Total Pendapatan</div>
+          <div style="font-size: 1.5rem; font-weight: bold; color: var(--success);" id="referralEarnings">Rp0</div>
+        </div>
+      </div>
+    </div>
+    
+    <div style="margin-top: 20px;">
+      <h4> Leaderboard Referral</h4>
+      <div id="referralLeaderboard" style="margin-top: 10px;">
+        <p class="text-muted">Memuat leaderboard...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL CHECK-IN (Simple) -->
+<div id="checkinModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2> Check-in Harian</h2>
+      <button class="modal-close" onclick="closeModal('checkinModal')">&times;</button>
+    </div>
+    <div style="text-align: center; padding: 30px 20px;">
+      <div style="font-size: 3rem; margin-bottom: 20px;"></div>
+      <h3 id="checkinMessage">Kamu mendapatkan <span class="text-success">Rp150</span> hari ini!</h3>
+      <p class="text-muted" style="margin: 15px 0;">Check-in setiap hari untuk dapat reward tambahan</p>
+      <button id="confirmCheckinBtn" class="btn btn-primary" style="padding: 12px 40px;">
+        Klaim Reward
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- SCRIPTS -->
+<script type="module" src="dashboard.js"></script>
+</body>
+</html>
+<!-- file content end -->

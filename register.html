@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Daftar – RewardShareIo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .register-container {
+      display: flex;
+      justify-content: center;
+      padding: 50px 20px;
+      min-height: 80vh;
+    }
+    .card {
+      max-width: 400px;
+      width: 100%;
+      padding: 30px;
+    }
+    .input { width:100%; padding:10px; margin-bottom:10px; }
+    .btn { width:100%; padding:12px; margin-top:10px; cursor:pointer; }
+    .text-danger { color:red; text-align:center; margin-top:10px; }
+    .link-text { text-align:center; margin-top:15px; }
+    .link-text a { color:#007bff; text-decoration:none; cursor:pointer; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">RewardShare<span class="text-primary">Io</span></div>
+</div>
+
+<div class="register-container">
+  <div class="card">
+    <h2 style="margin-bottom:20px;">Daftar</h2>
+
+    <input id="regEmail" type="email" class="input" placeholder="Email" style="margin-bottom:15px;">
+    <input id="regUsername" type="text" class="input" placeholder="Username" style="margin-bottom:15px;">
+    <input id="regPassword" type="password" class="input" placeholder="Kata Sandi" style="margin-bottom:15px;">
+    <input id="regConfirm" type="password" class="input" placeholder="Konfirmasi Kata Sandi" style="margin-bottom:15px;">
+    <input id="regReferral" type="text" class="input" placeholder="Kode Referral (opsional)" style="margin-bottom:20px;">
+
+    <button class="btn btn-primary" onclick="register()" style="margin-bottom:20px;">Daftar</button>
+    <p id="regMsg" class="text-danger" style="margin-bottom:20px;"></p>
+
+    <div class="link-text" style="margin-top:10px;">
+      Sudah punya akun? <a href="login.html">Login</a>
+    </div>
+  </div>
+</div>
+
+<div class="footer">© 2025 RewardShareIo</div>
+
+<script type="module" src="firebase.js"></script>
+<script type="module" src="register.js"></script>
+</body>
+</html>

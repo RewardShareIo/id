@@ -1,0 +1,236 @@
+<!-- file name: tasks.html -->
+<!-- file content begin -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Task Tersedia – RewardShareIo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .task-filter {
+      background: var(--bg-card);
+      border-radius: var(--border-radius);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-lg);
+      border: 1px solid var(--border-color);
+    }
+    .task-card {
+      background: var(--bg-card);
+      border-radius: var(--border-radius);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-md);
+      border: 1px solid var(--border-color);
+      transition: all var(--transition-normal);
+      position: relative;
+    }
+    .task-card:hover {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-lg);
+      border-color: var(--primary-sky);
+    }
+    .task-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: var(--space-md);
+    }
+    .task-reward {
+      background: var(--gradient-sky);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: bold;
+      font-size: var(--text-lg);
+      white-space: nowrap;
+    }
+    .task-meta {
+      display: flex;
+      gap: var(--space-md);
+      margin: var(--space-md) 0;
+      flex-wrap: wrap;
+    }
+    .task-instructions {
+      background: rgba(255,255,255,0.03);
+      border-left: 3px solid var(--primary-sky);
+      padding: var(--space-md);
+      border-radius: var(--border-radius-sm);
+      margin: var(--space-md) 0;
+      font-size: var(--text-sm);
+    }
+    .task-actions {
+      display: flex;
+      gap: var(--space-sm);
+      margin-top: var(--space-md);
+    }
+    .empty-state {
+      text-align: center;
+      padding: var(--space-2xl);
+      color: var(--text-muted);
+    }
+    .empty-state-icon {
+      font-size: 4rem;
+      margin-bottom: var(--space-md);
+      opacity: 0.3;
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">RewardShare<span class="text-primary">Io</span></div>
+  <div class="header-user-info">
+    <div id="userRefCode" class="user-ref-code" 
+         onclick="copyReferralFromHeader()"
+         title="Klik untuk salin kode referral">
+      <span class="ref-label">REF:</span>
+      <span>LOADING...</span>
+    </div>
+    <div id="userBalancePreview" class="user-balance-preview" 
+         onclick="window.location.href='dashboard.html'"
+         title="Kembali ke Dashboard">
+      ← Dashboard
+    </div>
+    <button id="logoutBtn" class="btn btn-sm btn-outline">Keluar</button>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="container">
+  <!-- PAGE HEADER -->
+  <div class="card">
+    <h1 class="card-title">📋 Task Tersedia</h1>
+    <p class="text-muted">Kerjakan task dan dapatkan reward. Pilih task yang sesuai dengan minatmu.</p>
+    
+    <!-- FILTERS -->
+    <div class="task-filter">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-md);">
+        <div>
+          <label class="input-label">Jenis Task</label>
+          <select id="filterType" class="input">
+            <option value="">Semua Jenis</option>
+            <option value="follow">Follow/Subscribe</option>
+            <option value="like">Like/Comment</option>
+            <option value="download">Download/Install</option>
+            <option value="review">Review/Testimoni</option>
+            <option value="share">Share/Repost</option>
+            <option value="custom">Custom Task</option>
+          </select>
+        </div>
+        <div>
+          <label class="input-label">Urutkan</label>
+          <select id="filterSort" class="input">
+            <option value="newest">Terbaru</option>
+            <option value="reward-high">Reward Tertinggi</option>
+            <option value="reward-low">Reward Terendah</option>
+            <option value="slots">Kuota Tersedia</option>
+          </select>
+        </div>
+        <div>
+          <label class="input-label">Reward Minimal</label>
+          <select id="filterReward" class="input">
+            <option value="0">Semua</option>
+            <option value="1000">Rp1.000+</option>
+            <option value="5000">Rp5.000+</option>
+            <option value="10000">Rp10.000+</option>
+            <option value="25000">Rp25.000+</option>
+          </select>
+        </div>
+        <div style="display: flex; align-items: end;">
+          <button onclick="applyFilters()" class="btn btn-primary btn-full">Terapkan Filter</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TASK COUNTER -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-lg);">
+      <h3 id="taskCount">Memuat task...</h3>
+      <button onclick="refreshTasks()" class="btn btn-sm btn-outline">🔄 Refresh</button>
+    </div>
+
+    <!-- TASKS CONTAINER -->
+    <div id="tasksContainer">
+      <div class="empty-state">
+        <div class="empty-state-icon">⏳</div>
+        <h3>Memuat task...</h3>
+        <p class="text-muted">Sedang mengambil data task dari server</p>
+      </div>
+    </div>
+
+    <!-- PAGINATION -->
+    <div id="pagination" style="display: flex; justify-content: center; gap: var(--space-sm); margin-top: var(--space-xl);">
+      <!-- Pagination akan di-generate oleh JavaScript -->
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  © 2025 RewardShareIo · <span id="footerStats">0 task tersedia</span>
+</div>
+
+<!-- MODAL KERJAKAN TASK -->
+<div id="taskModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 id="modalTaskTitle">Kerjakan Task</h2>
+      <button class="modal-close" onclick="closeModal('taskModal')">&times;</button>
+    </div>
+    
+    <div style="margin-bottom: var(--space-lg);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--space-md);">
+        <div>
+          <span class="badge badge-primary" id="modalTaskType">Task</span>
+          <span class="badge badge-success" id="modalTaskReward">Rp0</span>
+        </div>
+        <div class="text-muted" id="modalTaskSlots">0/0 slot</div>
+      </div>
+      
+      <div class="task-instructions" id="modalTaskInstructions">
+        <strong>Instruksi:</strong><br>
+        <span>Memuat instruksi...</span>
+      </div>
+      
+      <div id="modalTaskDetails" style="margin-top: var(--space-md);">
+        <!-- Detail tambahan akan dimuat di sini -->
+      </div>
+    </div>
+    
+    <!-- FORM UPLOAD BUKTI -->
+    <div id="proofForm">
+      <h4 style="margin-bottom: var(--space-md);">📸 Upload Bukti</h4>
+      <div style="margin-bottom: var(--space-md);">
+        <label class="input-label">Deskripsi Bukti (Opsional)</label>
+        <textarea id="proofDescription" class="input" rows="3" placeholder="Jelaskan bukti yang kamu upload..."></textarea>
+      </div>
+      
+      <div style="margin-bottom: var(--space-lg);">
+        <label class="input-label">Upload Screenshot/Gambar</label>
+        <div style="border: 2px dashed var(--border-color); border-radius: var(--border-radius); padding: var(--space-xl); text-align: center; cursor: pointer;" 
+             onclick="document.getElementById('proofFile').click()"
+             id="fileDropArea">
+          <div style="font-size: 3rem; margin-bottom: var(--space-md);">📎</div>
+          <p><strong>Klik atau drop file di sini</strong></p>
+          <p class="text-muted" style="font-size: var(--text-sm);">Format: JPG, PNG, GIF (Max 5MB)</p>
+          <input type="file" id="proofFile" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+        </div>
+        <div id="fileName" style="margin-top: var(--space-sm); font-size: var(--text-sm); display: none;"></div>
+      </div>
+      
+      <div style="display: flex; gap: var(--space-md);">
+        <button onclick="submitTaskProof()" class="btn btn-primary btn-full" id="submitProofBtn">
+          ✅ Submit Bukti Task
+        </button>
+        <button onclick="closeModal('taskModal')" class="btn btn-outline">Batal</button>
+      </div>
+      <p id="proofMessage" class="text-danger" style="margin-top: var(--space-md); text-align: center;"></p>
+    </div>
+  </div>
+</div>
+
+<!-- SCRIPTS -->
+<script type="module" src="tasks.js"></script>
+</body>
+</html>
+<!-- file content end -->

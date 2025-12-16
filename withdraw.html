@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Penarikan Saldo - RewardShareIo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="header">
+        <div class="logo">RewardShare<span class="text-primary">Io</span></div>
+        <a href="dashboard.html" class="btn btn-outline">← Dashboard</a>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2>Penarikan Saldo</h2>
+            <p class="text-muted">Tarik saldo Anda ke rekening atau e-wallet</p>
+            
+            <div style="padding: 20px; background: rgba(16, 185, 129, 0.05); border-radius: 10px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between;">
+                    <div>
+                        <strong>Saldo Tersedia</strong>
+                        <p id="availableBalance" style="font-size: 1.5rem; font-weight: bold; margin: 5px 0;">Rp0</p>
+                    </div>
+                </div>
+                <p style="font-size: 0.9rem; color: #64748b; margin-top: 10px;">
+                    Minimal penarikan: <strong>Rp30.000</strong> • Biaya admin: <strong>Rp2.000</strong>
+                </p>
+            </div>
+
+            <form id="withdrawForm">
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Nama Lengkap</label>
+                    <input type="text" id="name" class="input" placeholder="Nama sesuai rekening" required>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Metode Penarikan</label>
+                    <select id="method" class="input" required>
+                        <option value="">Pilih metode</option>
+                        <option value="BCA">BCA</option>
+                        <option value="BRI">BRI</option>
+                        <option value="BNI">BNI</option>
+                        <option value="Mandiri">Mandiri</option>
+                        <option value="DANA">DANA</option>
+                        <option value="OVO">OVO</option>
+                        <option value="GoPay">GoPay</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Nomor Rekening/E-wallet</label>
+                    <input type="text" id="accountNumber" class="input" placeholder="Contoh: 1234567890" required>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Jumlah Penarikan</label>
+                    <input type="number" id="amount" class="input" placeholder="Minimal 30000" min="30000" required>
+                    <p id="feeInfo" style="font-size: 0.85rem; color: #64748b; margin-top: 5px;">
+                        Akan diterima: <span id="netAmount">Rp0</span>
+                    </p>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 12px;">
+                    Ajukan Penarikan
+                </button>
+                <p id="withdrawMsg" class="text-danger" style="text-align: center; margin-top: 10px;"></p>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="withdraw.js"></script>
+</body>
+</html>

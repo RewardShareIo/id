@@ -1,0 +1,204 @@
+<!-- file name: setup-admin.html -->
+<!-- file content begin -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Setup Admin – RewardShareIo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">RewardShare<span class="text-primary">Io</span> <small style="color: var(--danger);">SETUP</small></div>
+</div>
+
+<div class="container" style="max-width: 600px; margin: 50px auto;">
+  <div class="card">
+    <h2>👑 Setup Admin User</h2>
+    <p class="text-muted">Set user tertentu menjadi administrator sistem</p>
+    
+    <div style="margin: var(--space-xl) 0;">
+      <label class="input-label">Email User yang akan jadi Admin</label>
+      <input type="email" id="userEmail" class="input" placeholder="user@email.com">
+      
+      <button onclick="findUser()" class="btn btn-primary" style="margin-top: var(--space-md); width: 100%;">
+        🔍 Cari User
+      </button>
+    </div>
+    
+    <!-- USER INFO -->
+    <div id="userInfo" style="display: none; margin: var(--space-xl) 0; padding: var(--space-lg); background: var(--bg-secondary); border-radius: var(--border-radius);">
+      <h3>User Found:</h3>
+      <p><strong>UID:</strong> <span id="foundUid" style="font-family: monospace;"></span></p>
+      <p><strong>Email:</strong> <span id="foundEmail"></span></p>
+      <p><strong>Username:</strong> <span id="foundUsername"></span></p>
+      <p><strong>Current Role:</strong> <span id="foundRole" class="badge badge-warning">user</span></p>
+      
+      <button onclick="makeAdmin()" class="btn btn-success" style="margin-top: var(--space-lg); width: 100%;">
+        👑 Set sebagai Admin
+      </button>
+    </div>
+    
+    <p id="setupMessage" class="text-danger" style="text-align: center; margin-top: var(--space-lg);"></p>
+  </div>
+  
+  <!-- LIST ALL USERS -->
+  <div class="card" style="margin-top: var(--space-xl);">
+    <h3>📋 Semua User Terdaftar</h3>
+    <div id="allUsers">
+      <p class="text-muted">Memuat daftar user...</p>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { auth, db } from "./firebase.js";
+import { collection, getDocs, doc, getDoc, updateDoc, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+let selectedUserId = null;
+
+// Load all users
+async function loadAllUsers() {
+  try {
+    const usersSnap = await getDocs(collection(db, "users"));
+    const container = document.getElementById('allUsers');
+    
+    let html = '<div style="display: grid; gap: var(--space-sm);">';
+    
+    usersSnap.forEach(userDoc => {
+      const user = userDoc.data();
+      const isAdmin = user.role === 'admin' || user.isAdmin === true;
+      
+      html += `
+        <div style="padding: var(--space-sm); background: var(--bg-card); border-radius: var(--border-radius-sm); border: 1px solid ${isAdmin ? 'var(--success)' : 'var(--border-color)'};">
+          <div style="display: flex; justify-content: space-between;">
+            <div>
+              <strong>${user.username || user.email}</strong>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">
+                ${user.email} • ${userDoc.id.substring(0, 8)}...
+              </div>
+            </div>
+            <div>
+              ${isAdmin ? 
+                '<span class="badge badge-success">ADMIN</span>' : 
+                `<button onclick="setUserAsAdmin('${userDoc.id}')" class="btn btn-sm btn-outline">Set Admin</button>`
+              }
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    
+    html += '</div>';
+    container.innerHTML = html;
+    
+  } catch (error) {
+    console.error("Error loading users:", error);
+  }
+}
+
+// Find user by email
+window.findUser = async function() {
+  const email = document.getElementById('userEmail').value.trim();
+  const messageEl = document.getElementById('setupMessage');
+  
+  if (!email) {
+    messageEl.textContent = "Masukkan email user";
+    return;
+  }
+  
+  try {
+    // Cari user berdasarkan email
+    const usersQuery = query(
+      collection(db, "users"),
+      where("email", "==", email)
+    );
+    
+    const usersSnap = await getDocs(usersQuery);
+    
+    if (usersSnap.empty) {
+      messageEl.textContent = "User dengan email tersebut tidak ditemukan";
+      document.getElementById('userInfo').style.display = 'none';
+      return;
+    }
+    
+    const userDoc = usersSnap.docs[0];
+    const user = userDoc.data();
+    selectedUserId = userDoc.id;
+    
+    // Tampilkan info user
+    document.getElementById('foundUid').textContent = userDoc.id;
+    document.getElementById('foundEmail').textContent = user.email;
+    document.getElementById('foundUsername').textContent = user.username || '-';
+    document.getElementById('foundRole').textContent = user.role || 'user';
+    document.getElementById('foundRole').className = user.role === 'admin' ? 'badge badge-success' : 'badge badge-warning';
+    
+    document.getElementById('userInfo').style.display = 'block';
+    messageEl.textContent = '';
+    
+  } catch (error) {
+    console.error("Error finding user:", error);
+    messageEl.textContent = "Error: " + error.message;
+  }
+};
+
+// Make user admin
+window.makeAdmin = async function() {
+  if (!selectedUserId) return;
+  
+  const messageEl = document.getElementById('setupMessage');
+  
+  try {
+    // Update user document
+    await updateDoc(doc(db, "users", selectedUserId), {
+      role: 'admin',
+      isAdmin: true,
+      updatedAt: new Date()
+    });
+    
+    messageEl.textContent = "✅ User berhasil di-set sebagai admin!";
+    messageEl.className = "text-success";
+    
+    // Update UI
+    document.getElementById('foundRole').textContent = 'admin';
+    document.getElementById('foundRole').className = 'badge badge-success';
+    
+    // Reload user list
+    await loadAllUsers();
+    
+  } catch (error) {
+    console.error("Error making admin:", error);
+    messageEl.textContent = "❌ Gagal: " + error.message;
+    messageEl.className = "text-danger";
+  }
+};
+
+// Quick set admin from list
+window.setUserAsAdmin = async function(userId) {
+  if (!confirm("Set user ini sebagai admin?")) return;
+  
+  try {
+    await updateDoc(doc(db, "users", userId), {
+      role: 'admin',
+      isAdmin: true,
+      updatedAt: new Date()
+    });
+    
+    alert("✅ User berhasil di-set sebagai admin!");
+    loadAllUsers();
+    
+  } catch (error) {
+    console.error("Error:", error);
+    alert("❌ Gagal: " + error.message);
+  }
+};
+
+// Initialize
+document.addEventListener('DOMContentLoaded', loadAllUsers);
+</script>
+
+</body>
+</html>
+<!-- file content end -->

@@ -1,0 +1,816 @@
+🌐 RewardShareIo
+
+Earn & Share Rewards Fairly
+
+
+---
+
+1️⃣ DESKRIPSI UMUM PLATFORM
+
+RewardShareIo adalah platform berbasis web yang memungkinkan pengguna mendapatkan penghasilan tambahan melalui:
+
+Mengerjakan task promosi
+
+Mengikuti program referral
+
+Check-in harian berbayar
+
+
+Selain itu, pengguna juga dapat berperan sebagai advertiser untuk membuat task promosi sendiri setelah memenuhi syarat tertentu.
+
+Platform ini mengutamakan:
+
+Transparansi
+
+Keamanan
+
+Kontrol manual oleh admin
+
+Pengalaman pengguna yang sederhana namun profesional
+
+
+
+---
+
+2️⃣ KONSEP AKUN & ROLE
+
+🔑 Sistem Akun Tunggal
+
+1 akun = user + advertiser
+
+Tidak ada pemisahan akun
+
+Role ditentukan dari aksi user, bukan tipe akun
+
+
+📱 Aturan Device
+
+1 device = 1 akun
+
+Sistem mencegah multi-akun
+
+Device ID disimpan & diverifikasi
+
+
+
+---
+
+3️⃣ LANDING PAGE (TANPA FIREBASE)
+
+🎯 Fungsi Utama
+
+Menjelaskan apa itu RewardShareIo
+
+Meyakinkan user untuk mendaftar
+
+Menampilkan statistik platform
+
+
+📊 Statistik (Data Statis / Palsu)
+
+Total User: 15.000+
+
+Total Task Aktif
+
+Total Reward Dibagikan
+
+Task Selesai
+
+Negara Aktif
+
+
+> ⚠️ Semua data hardcoded, tidak terhubung ke Firebase atau database apa pun.
+
+
+
+🔐 Akses Admin
+
+Icon kecil (⚙️ / 🔐) di pojok kanan
+
+Mengarah ke halaman login admin
+
+Tidak mencolok bagi user umum
+
+
+
+---
+
+4️⃣ SISTEM LOGIN & DAFTAR
+
+🔐 Authentication
+
+Firebase Authentication (Email & Password)
+
+Login & daftar dalam 1 halaman
+
+Akun dibuat otomatis jika belum ada
+
+
+📱 Device Restriction
+
+Satu device hanya boleh satu akun
+
+Akun baru ditolak jika device sudah terdaftar
+
+
+👥 Referral System
+
+Setiap user mendapat kode referral unik
+
+Referral opsional saat daftar
+
+Reward referral: +250 rupiah / referral valid
+
+Dicatat dalam sistem & leaderboard
+
+
+
+---
+
+5️⃣ DASHBOARD USER
+
+🧱 Komponen Utama
+
+Header:
+
+Tombol Logout (kanan atas)
+
+Menu navigasi (☰)
+
+
+Card Saldo:
+
+Saldo utama
+
+Saldo referral
+
+Saldo pending
+
+
+Quick menu:
+
+Check-in
+
+Task
+
+Referral
+
+Deposit
+
+Penarikan
+
+History
+
+Buat Task
+
+
+
+
+---
+
+6️⃣ CHECK-IN HARIAN
+
+📅 Aturan
+
+1x klaim per hari
+
+Reward: 150 rupiah
+
+Berlaku seumur hidup
+
+Reset setiap 00:00
+
+Tidak bisa double claim
+
+
+
+---
+
+7️⃣ SISTEM REFERRAL
+
+📊 Informasi Ditampilkan
+
+Total referral
+
+Total penghasilan referral
+
+Daftar user yang diundang
+
+Leaderboard referral
+
+
+📜 Aturan
+
+1 referral valid = +250
+
+Referral valid jika user aktif
+
+Tidak ada batas maksimal referral
+
+
+
+---
+
+8️⃣ SISTEM TASK
+
+📋 Jenis Task
+
+Follow
+
+Like
+
+Subscribe
+
+Download
+
+Belanja
+
+Custom task (bebas)
+
+
+📄 Detail Task
+
+Setiap task menampilkan:
+
+Judul
+
+Deskripsi
+
+Instruksi lengkap
+
+Gambar / link
+
+Reward
+
+Kuota
+
+
+📸 Proof Task
+
+User wajib upload bukti
+
+Bukti masuk status PENDING
+
+Menunggu review admin
+
+
+
+---
+
+9️⃣ DEPOSIT
+
+💰 Fungsi Deposit
+
+Deposit hanya untuk membuat task
+
+Tidak bisa langsung ditarik
+
+
+📌 Aturan Deposit
+
+Minimal: 30.000
+
+Deposit dikunci 3 hari
+
+Submit bukti transfer wajib
+
+
+🏦 Metode
+
+Bank: BCA, BRI, BNI, Mandiri
+
+E-wallet: DANA, OVO, GoPay
+
+
+
+---
+
+🔟 PENARIKAN (WITHDRAW)
+
+🧾 Form Withdraw
+
+Nama
+
+Metode (Bank / E-wallet)
+
+Nomor rekening / e-wallet
+
+Jumlah
+
+
+⚠️ Aturan
+
+Minimal withdraw: 30.000
+
+Fee: 2.000
+
+Proses manual admin
+
+Waktu proses: 3×24 jam
+
+
+📜 Status
+
+Pending
+
+Rejected
+
+Success
+
+
+
+---
+
+1️⃣1️⃣ HISTORY
+
+📊 Riwayat Lengkap
+
+History task
+
+History deposit
+
+History withdraw
+
+History referral
+
+Timestamp & status jelas
+
+
+
+---
+
+1️⃣2️⃣ BUAT TASK (ADVERTISER)
+
+🔒 Syarat
+
+User harus pernah deposit ≥ 50.000
+
+
+📝 Pengaturan Task
+
+Jenis task
+
+Instruksi
+
+Reward per task
+
+Jumlah task
+
+Total biaya
+
+
+💸 Perhitungan
+
+Contoh:
+
+Reward worker: 1.000
+
+Potongan advertiser: 1.500
+
+Fee platform: 500
+
+
+
+---
+
+1️⃣3️⃣ ADMIN PANEL
+
+🔐 Akses
+
+Halaman terpisah
+
+Login khusus admin
+
+
+📊 Dashboard Admin
+
+Total user
+
+Total saldo
+
+Total task
+
+Total deposit & withdraw
+
+
+⏳ Approval Manual
+
+Proof task
+
+Deposit
+
+Withdraw
+
+Task user
+
+
+👤 Manajemen User
+
+Cari user
+
+Detail lengkap
+
+Tambah saldo manual
+
+Hapus / ban user
+
+
+📜 Audit & Log
+
+Semua aksi admin tercatat
+
+Anti penyalahgunaan
+
+
+
+---
+
+1️⃣4️⃣ KEAMANAN & ANTI FRAUD
+
+1 device 1 akun
+
+IP risk detection
+
+Device trust score
+
+Fraud score internal
+
+Shadow ban (manual)
+
+Cooldown user baru
+
+
+
+---
+
+1️⃣5️⃣ DESAIN & UI
+
+Tema: Dark / Elegant
+
+Warna: Hitam, abu gelap, hijau/biru aksen
+
+Responsive:
+
+Mobile
+
+Tablet
+
+Desktop
+
+
+Fokus:
+
+Bersih
+
+Profesional
+
+Mudah dipakai
+
+
+
+
+---
+
+✅ KESIMPULAN
+
+RewardShareIo adalah platform reward & task dengan:
+
+Kontrol penuh di tangan admin
+
+Sistem aman & transparan
+
+Struktur jelas untuk dikembangkan
+
+Siap scale ke mobile app di masa depan
+
+
+apikey firebase :
+const firebaseConfig = {
+  apiKey: "AIzaSyCFV_3L0sdLHXLP41upJxUv_HXQbBwu9yg",
+  authDomain: "rewardshareio.firebaseapp.com",
+  projectId: "rewardshareio",
+  storageBucket: "rewardshareio.appspot.com",
+  messagingSenderId: "117198044906",
+  appId: "1:117198044906:web:1ae2d1aae01ef2d810a193"
+};
+
+imgg :
+4a8d88aeac88b452c19e45cd77ea771d
+
+🔥 CARA KERJA PROYEK REWARDSHAREIO (FINAL & BENAR)
+
+🧠 PRINSIP UTAMA SISTEM
+
+❌ Firebase Storage TIDAK dipakai (hemat biaya)
+
+✅ Semua bukti gambar → upload ke IMGG
+
+✅ Firebase hanya simpan:
+
+link gambar (URL imgg)
+
+status
+
+data user
+
+data task
+
+
+✅ Admin panel hanya baca data Firebase + buka link gambar
+
+
+
+---
+
+🗂️ PEMBAGIAN TEKNOLOGI (WAJIB PAHAM)
+
+Bagian	Teknologi
+
+Landing Page	HTML / CSS / JS (NO Firebase)
+Login / User	Firebase Auth
+Database	Firebase Firestore / Realtime DB
+Bukti Gambar	IMGG
+Admin Panel	Firebase + link IMGG
+
+
+
+---
+
+🔁 ALUR BESAR SISTEM (GLOBAL)
+
+USER
+│
+├─ Login / Daftar (Firebase Auth)
+│
+├─ Aksi (Deposit / Task / Withdraw)
+│
+├─ Upload BUKTI (ke IMGG)
+│
+├─ Simpan LINK ke Firebase
+│
+└─ Menunggu ADMIN
+     │
+     ├─ Approve
+     └─ Reject
+
+
+---
+
+1️⃣ ALUR BUKTI DEPOSIT (PALING PENTING)
+
+👤 SISI USER
+
+1. User pilih menu Deposit
+
+
+2. User transfer ke rekening admin
+
+
+3. User klik Upload Bukti Deposit
+
+
+4. Sistem:
+
+Upload gambar ke IMGG
+
+IMGG mengembalikan:
+
+https://i.imgg.com/xxxx.jpg
+
+
+
+5. Sistem simpan ke Firebase:
+
+❌ gambar
+
+✅ LINK GAMBAR
+
+
+
+
+📦 DATA YANG MASUK FIREBASE
+
+deposit: {
+  userId: "UID123",
+  amount: 50000,
+  proofUrl: "https://i.imgg.com/xxxx.jpg",
+  status: "pending",
+  createdAt: timestamp
+}
+
+
+---
+
+🛡️ SISI ADMIN
+
+1. Admin buka Admin Panel
+
+
+2. Masuk menu Deposit Pending
+
+
+3. Admin melihat:
+
+Nama user
+
+Nominal
+
+Button: Lihat Bukti
+
+
+
+4. Klik → buka link IMGG (tab baru)
+
+
+5. Admin pilih:
+
+✅ Approve → saldo user bertambah (locked 3 hari)
+
+❌ Reject → deposit ditolak
+
+
+
+
+📌 Admin tidak upload apa-apa
+📌 Admin hanya melihat link IMGG
+
+
+---
+
+2️⃣ ALUR BUKTI TASK (SAMA KONSEPNYA)
+
+👤 SISI USER
+
+1. User buka Task
+
+
+2. Kerjakan instruksi (follow, like, dll)
+
+
+3. Klik Upload Bukti
+
+
+4. Sistem:
+
+Upload screenshot ke IMGG
+
+Dapat URL gambar
+
+
+
+5. Sistem simpan ke Firebase:
+
+
+
+taskProof: {
+  taskId: "TASK001",
+  userId: "UID123",
+  proofUrl: "https://i.imgg.com/task123.jpg",
+  status: "pending",
+  submittedAt: timestamp
+}
+
+
+---
+
+🛡️ SISI ADMIN
+
+1. Admin buka Task Proof Pending
+
+
+2. Admin lihat:
+
+Judul task
+
+User
+
+Reward
+
+
+
+3. Klik Lihat Bukti
+
+Buka gambar dari IMGG
+
+
+
+4. Admin:
+
+✅ Approve
+
+User dapat reward
+
+Advertiser saldo berkurang
+
+
+❌ Reject
+
+User tidak dapat apa-apa
+
+
+
+
+
+
+---
+
+3️⃣ ALUR WITHDRAW (TANPA GAMBAR)
+
+Withdraw TIDAK pakai IMGG
+
+User isi form withdraw
+→ Firebase simpan data
+→ Admin proses manual
+→ Admin update status
+
+withdraw: {
+  userId: "UID123",
+  amount: 30000,
+  method: "DANA",
+  status: "pending"
+}
+
+
+---
+
+4️⃣ KENAPA IMGG + FIREBASE INI IDEAL?
+
+✅ KEUNTUNGAN
+
+Firebase hemat biaya
+
+Tidak kena limit Storage
+
+Gambar cepat dibuka admin
+
+Database tetap ringan
+
+Mudah di-maintain
+
+
+❌ TANPA IMGG
+
+Firebase Storage boros
+
+Cepat limit
+
+Mahal kalau user banyak
+
+
+👉 Pilihan kamu SUDAH BENAR
+
+
+---
+
+5️⃣ APA YANG PERLU KAMU SCREENSHOT KE IMGG?
+
+⚠️ PENTING UNTUK AI LAIN
+
+Yang kamu screenshot:
+
+❌ BUKAN database
+
+❌ BUKAN Firebase
+
+✅ ALUR GAMBAR BUKTI
+
+
+Yang perlu kamu tunjukkan:
+
+Contoh bukti deposit
+
+Contoh bukti task
+
+Cara admin buka bukti via link
+
+
+
+---
+
+6️⃣ STRUKTUR DATABASE (SINGKAT, BIAR JELAS)
+
+users/
+tasks/
+taskProofs/
+deposits/
+withdraws/
+referrals/
+checkins/
+adminLogs/
+
+➡️ SEMUA bukti = URL IMGG
+
+
+---
+
+🔥 RINGKASAN SUPER SINGKAT
+
+📸 Bukti → IMGG
+
+🔗 Firebase simpan link
+
+👮 Admin buka link
+
+💸 Saldo diubah admin
+
+❌ Tidak ada auto approve

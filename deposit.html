@@ -1,0 +1,390 @@
+<!-- file name: deposit.html -->
+<!-- file content begin -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Deposit – RewardShareIo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .method-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: var(--space-md);
+      margin: var(--space-lg) 0;
+    }
+    .method-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border-color);
+      border-radius: var(--border-radius);
+      padding: var(--space-lg);
+      cursor: pointer;
+      transition: all var(--transition-normal);
+      text-align: center;
+    }
+    .method-card:hover, .method-card.selected {
+      border-color: var(--primary-sky);
+      background: rgba(14, 165, 233, 0.05);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow);
+    }
+    .method-icon {
+      font-size: 2.5rem;
+      margin-bottom: var(--space-sm);
+    }
+    .bank-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: var(--primary-sky);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto var(--space-sm);
+      font-weight: bold;
+    }
+    .amount-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: var(--space-sm);
+      margin: var(--space-lg) 0;
+    }
+    .amount-option {
+      padding: var(--space-md);
+      background: var(--bg-secondary);
+      border: 2px solid var(--border-color);
+      border-radius: var(--border-radius-sm);
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .amount-option:hover, .amount-option.selected {
+      border-color: var(--primary-sky);
+      background: rgba(14, 165, 233, 0.1);
+      font-weight: bold;
+    }
+    .amount-option .note {
+      font-size: var(--text-xs);
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .account-info {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(168, 85, 247, 0.1));
+      border-radius: var(--border-radius);
+      padding: var(--space-lg);
+      margin: var(--space-lg) 0;
+      border: 1px solid var(--primary-sky);
+    }
+    .account-detail {
+      font-family: var(--font-mono);
+      background: rgba(0, 0, 0, 0.2);
+      padding: var(--space-md);
+      border-radius: var(--border-radius-sm);
+      margin: var(--space-md) 0;
+      word-break: break-all;
+    }
+    .upload-area {
+      border: 2px dashed var(--border-color);
+      border-radius: var(--border-radius);
+      padding: var(--space-2xl) var(--space-lg);
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition-normal);
+      margin: var(--space-lg) 0;
+    }
+    .upload-area:hover, .upload-area.dragover {
+      border-color: var(--primary-sky);
+      background: rgba(14, 165, 233, 0.05);
+    }
+    .upload-icon {
+      font-size: 3rem;
+      margin-bottom: var(--space-md);
+      color: var(--primary-sky);
+    }
+    .file-preview {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      background: var(--bg-secondary);
+      padding: var(--space-md);
+      border-radius: var(--border-radius-sm);
+      margin-top: var(--space-md);
+    }
+    .file-preview img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      border: 2px solid var(--border-color);
+    }
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-md);
+      background: var(--bg-card);
+      border-radius: var(--border-radius-sm);
+      margin-bottom: var(--space-sm);
+      border-left: 4px solid var(--border-color);
+    }
+    .history-item.approved { border-left-color: var(--success); }
+    .history-item.pending { border-left-color: var(--warning); }
+    .history-item.rejected { border-left-color: var(--danger); }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo">RewardShare<span class="text-primary">Io</span></div>
+  <div class="header-user-info">
+    <div id="userRefCode" class="user-ref-code" onclick="copyReferralFromHeader()">
+      <span class="ref-label">REF:</span>
+      <span>LOADING...</span>
+    </div>
+    <div id="userBalancePreview" class="user-balance-preview" onclick="window.location.href='dashboard.html'">
+      ← Dashboard
+    </div>
+    <button id="logoutBtn" class="btn btn-sm btn-outline">Keluar</button>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="container">
+  <!-- PAGE HEADER -->
+  <div class="card">
+    <h1 class="card-title">💰 Deposit Saldo</h1>
+    <p class="text-muted">
+      Deposit saldo untuk membuat task sebagai advertiser. Saldo deposit akan dikunci selama 3 hari sebelum bisa digunakan.
+    </p>
+    <div class="alert" style="background: rgba(251, 191, 36, 0.1); border: 1px solid var(--secondary-gold); padding: var(--space-md); border-radius: var(--border-radius-sm); margin: var(--space-lg) 0;">
+      <strong>⚠️ Penting:</strong> 
+      <ul style="margin: var(--space-sm) 0 var(--space-sm) var(--space-lg);">
+        <li>Minimal deposit: <strong>Rp30.000</strong></li>
+        <li>Saldo terkunci: <strong>3 hari</strong></li>
+        <li>Hanya untuk membuat task (tidak bisa ditarik langsung)</li>
+        <li>Proses manual oleh admin (1-12 jam)</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- DEPOSIT FORM -->
+  <div class="card">
+    <h2 class="card-title">1. Pilih Metode</h2>
+    
+    <div class="method-grid">
+      <!-- BANK TRANSFER -->
+      <div class="method-card" data-method="BCA" onclick="selectMethod('BCA')">
+        <div class="bank-icon">BCA</div>
+        <h3>Bank BCA</h3>
+        <p class="text-muted">Transfer Bank</p>
+      </div>
+      
+      <div class="method-card" data-method="BRI" onclick="selectMethod('BRI')">
+        <div class="bank-icon">BRI</div>
+        <h3>Bank BRI</h3>
+        <p class="text-muted">Transfer Bank</p>
+      </div>
+      
+      <div class="method-card" data-method="BNI" onclick="selectMethod('BNI')">
+        <div class="bank-icon">BNI</div>
+        <h3>Bank BNI</h3>
+        <p class="text-muted">Transfer Bank</p>
+      </div>
+      
+      <!-- E-WALLET -->
+      <div class="method-card" data-method="DANA" onclick="selectMethod('DANA')">
+        <div class="method-icon">💜</div>
+        <h3>DANA</h3>
+        <p class="text-muted">E-Wallet</p>
+      </div>
+      
+      <div class="method-card" data-method="OVO" onclick="selectMethod('OVO')">
+        <div class="method-icon">💙</div>
+        <h3>OVO</h3>
+        <p class="text-muted">E-Wallet</p>
+      </div>
+      
+      <div class="method-card" data-method="GoPay" onclick="selectMethod('GoPay')">
+        <div class="method-icon">💚</div>
+        <h3>GoPay</h3>
+        <p class="text-muted">E-Wallet</p>
+      </div>
+    </div>
+    
+    <div id="selectedMethodInfo" style="display: none;">
+      <h3 style="margin-top: var(--space-lg);">Metode terpilih: <span id="methodName" class="text-primary"></span></h3>
+    </div>
+  </div>
+
+  <!-- AMOUNT SELECTION -->
+  <div class="card">
+    <h2 class="card-title">2. Pilih Jumlah</h2>
+    
+    <div class="amount-grid">
+      <div class="amount-option" data-amount="30000" onclick="selectAmount(30000)">
+        <div>Rp30.000</div>
+        <div class="note">Minimal</div>
+      </div>
+      <div class="amount-option" data-amount="50000" onclick="selectAmount(50000)">
+        <div>Rp50.000</div>
+        <div class="note">+20K extra</div>
+      </div>
+      <div class="amount-option" data-amount="100000" onclick="selectAmount(100000)">
+        <div>Rp100.000</div>
+        <div class="note">Best Value</div>
+      </div>
+      <div class="amount-option" data-amount="200000" onclick="selectAmount(200000)">
+        <div>Rp200.000</div>
+        <div class="note">+50K bonus</div>
+      </div>
+      <div class="amount-option" data-amount="500000" onclick="selectAmount(500000)">
+        <div>Rp500.000</div>
+        <div class="note">VIP</div>
+      </div>
+      <div class="amount-option" onclick="showCustomAmount()">
+        <div>Lainnya</div>
+        <div class="note">Custom amount</div>
+      </div>
+    </div>
+    
+    <!-- CUSTOM AMOUNT INPUT -->
+    <div id="customAmountContainer" style="display: none; margin-top: var(--space-lg);">
+      <label class="input-label">Masukkan jumlah custom (minimal Rp30.000)</label>
+      <div style="display: flex; gap: var(--space-sm);">
+        <input type="number" id="customAmount" class="input" placeholder="50000" min="30000" step="1000" style="flex: 1;">
+        <button onclick="useCustomAmount()" class="btn btn-primary">Gunakan</button>
+      </div>
+    </div>
+    
+    <div id="selectedAmountInfo" style="margin-top: var(--space-lg); padding: var(--space-md); background: var(--bg-secondary); border-radius: var(--border-radius);">
+      <div style="display: flex; justify-content: space-between;">
+        <span>Jumlah Deposit:</span>
+        <strong id="displayAmount" class="text-primary">Rp0</strong>
+      </div>
+      <div style="display: flex; justify-content: space-between; margin-top: var(--space-sm);">
+        <span>Saldo Terkunci:</span>
+        <span id="lockPeriod" class="text-muted">3 hari</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ACCOUNT INFO (akan muncul setelah metode dipilih) -->
+  <div id="accountInfoContainer" class="account-info" style="display: none;">
+    <h2 class="card-title">3. Transfer ke Rekening Berikut</h2>
+    <p class="text-muted">Lakukan transfer dengan nominal <strong>tepat</strong> sesuai jumlah deposit yang dipilih.</p>
+    
+    <div id="accountDetails">
+      <!-- Detail rekening akan diisi oleh JavaScript -->
+    </div>
+    
+    <div style="margin-top: var(--space-lg);">
+      <strong>Catatan Penting:</strong>
+      <ol style="margin: var(--space-sm) 0 var(--space-sm) var(--space-lg);">
+        <li>Transfer dengan nominal <strong>tepat sesuai jumlah deposit</strong></li>
+        <li>Simpan bukti transfer/screenshot</li>
+        <li>Saldo akan aktif dalam 1-12 jam setelah konfirmasi admin</li>
+        <li>Saldo terkunci 3 hari untuk keamanan</li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- UPLOAD PROOF -->
+  <div id="uploadContainer" class="card" style="display: none;">
+    <h2 class="card-title">4. Upload Bukti Transfer</h2>
+    
+    <div class="upload-area" id="uploadArea" onclick="document.getElementById('proofFile').click()">
+      <div class="upload-icon">📎</div>
+      <h3>Klik atau drop file bukti transfer di sini</h3>
+      <p class="text-muted">Format: JPG, PNG, GIF (Maksimal 5MB)</p>
+    </div>
+    
+    <input type="file" id="proofFile" accept="image/*" style="display: none;" onchange="handleFileSelect(event)">
+    
+    <!-- FILE PREVIEW -->
+    <div id="filePreview" class="file-preview" style="display: none;">
+      <img id="previewImage" src="" alt="Preview">
+      <div style="flex: 1;">
+        <strong id="fileName"></strong>
+        <div class="text-muted" id="fileSize"></div>
+        <button onclick="removeFile()" class="btn btn-sm btn-danger" style="margin-top: var(--space-sm);">Hapus</button>
+      </div>
+    </div>
+    
+    <!-- SUBMIT BUTTON -->
+    <div style="margin-top: var(--space-xl);">
+      <button onclick="submitDeposit()" class="btn btn-primary btn-lg btn-full" id="submitBtn" disabled>
+        🚀 Kirim Deposit untuk Review
+      </button>
+      <p id="submitMessage" class="text-danger" style="text-align: center; margin-top: var(--space-md);"></p>
+    </div>
+  </div>
+
+  <!-- DEPOSIT HISTORY -->
+  <div class="card">
+    <h2 class="card-title">📜 Riwayat Deposit</h2>
+    <p class="text-muted">Riwayat deposit terakhir kamu.</p>
+    
+    <div id="depositHistory">
+      <div class="empty-state" style="text-align: center; padding: var(--space-xl); color: var(--text-muted);">
+        <div style="font-size: 3rem; margin-bottom: var(--space-md);">📭</div>
+        <h3>Belum ada riwayat deposit</h3>
+        <p>Setelah melakukan deposit, riwayat akan muncul di sini</p>
+      </div>
+    </div>
+    
+    <div style="text-align: center; margin-top: var(--space-lg);">
+      <button onclick="loadMoreHistory()" class="btn btn-outline" id="loadMoreBtn" style="display: none;">
+        Muat lebih banyak
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  © 2025 RewardShareIo · Support: admin@rewardshareio.com
+</div>
+
+<!-- MODAL SUCCESS -->
+<div id="successModal" class="modal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>✅ Deposit Berhasil Dikirim!</h2>
+      <button class="modal-close" onclick="closeModal('successModal')">&times;</button>
+    </div>
+    <div style="text-align: center; padding: var(--space-xl) var(--space-lg);">
+      <div style="font-size: 4rem; margin-bottom: var(--space-lg);">🎉</div>
+      <h3>Deposit kamu sedang diproses</h3>
+      <p class="text-muted" style="margin: var(--space-lg) 0;">
+        Bukti transfer telah dikirim ke admin. Saldo akan aktif dalam 1-12 jam setelah dikonfirmasi.
+      </p>
+      <div style="background: var(--bg-secondary); padding: var(--space-md); border-radius: var(--border-radius); margin: var(--space-lg) 0;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: var(--space-sm);">
+          <span>Jumlah:</span>
+          <strong id="successAmount">Rp0</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span>Kode Deposit:</span>
+          <strong id="successCode" class="text-primary">DEP-XXXX</strong>
+        </div>
+      </div>
+      <div style="display: flex; gap: var(--space-md); justify-content: center;">
+        <button onclick="window.location.href='dashboard.html'" class="btn btn-primary">
+          Kembali ke Dashboard
+        </button>
+        <button onclick="window.location.href='history.html'" class="btn btn-outline">
+          Lihat History
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCRIPTS -->
+<script type="module" src="deposit.js"></script>
+</body>
+</html>
+<!-- file content end -->

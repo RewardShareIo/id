@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Task Saya - RewardShareIo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .task-status {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-approved { background: #d1fae5; color: #065f46; }
+        .status-rejected { background: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">RewardShare<span class="text-primary">Io</span></div>
+        <a href="dashboard.html" class="btn btn-outline">← Dashboard</a>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h2>Task Saya</h2>
+            <p class="text-muted">Riwayat task yang sudah Anda kerjakan</p>
+            
+            <div id="taskList" class="task-list">
+                <!-- Task akan dimuat di sini -->
+                <p class="text-muted center">Memuat data...</p>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="my-tasks.js"></script>
+</body>
+</html>

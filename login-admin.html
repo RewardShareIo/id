@@ -1,0 +1,119 @@
+<!-- file name: login-admin.html -->
+<!-- file content begin -->
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Login – RewardShareIo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .admin-login-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    }
+    .admin-login-card {
+      background: var(--bg-card);
+      border-radius: var(--border-radius);
+      padding: var(--space-2xl);
+      width: 100%;
+      max-width: 400px;
+      box-shadow: var(--shadow-xl);
+      border: 2px solid var(--primary-sky);
+    }
+    .admin-logo {
+      text-align: center;
+      margin-bottom: var(--space-xl);
+    }
+    .admin-logo .logo {
+      font-size: var(--text-3xl);
+      background: var(--gradient-premium);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .admin-badge {
+      display: inline-block;
+      background: var(--primary-sky);
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: var(--text-xs);
+      font-weight: bold;
+      margin-left: var(--space-sm);
+    }
+    .admin-note {
+      background: rgba(14, 165, 233, 0.1);
+      border: 1px solid rgba(14, 165, 233, 0.3);
+      border-radius: var(--border-radius-sm);
+      padding: var(--space-md);
+      margin: var(--space-lg) 0;
+      font-size: var(--text-sm);
+    }
+  </style>
+</head>
+<body>
+
+<div class="admin-login-container">
+  <div class="admin-login-card">
+    
+    <!-- ADMIN LOGO -->
+    <div class="admin-logo">
+      <div class="logo">RewardShare<span class="text-primary">Io</span></div>
+      <div style="margin-top: var(--space-sm); color: var(--text-muted);">
+        ADMIN PANEL <span class="admin-badge">RESTRICTED</span>
+      </div>
+    </div>
+    
+    <!-- LOGIN FORM -->
+    <h2 style="text-align: center; margin-bottom: var(--space-md);">🔐 Admin Login</h2>
+    <p class="text-muted" style="text-align: center; margin-bottom: var(--space-xl);">
+      Hanya untuk authorized personnel
+    </p>
+    
+    <!-- ADMIN NOTE -->
+    <div class="admin-note">
+      <strong>⚠️ PERHATIAN:</strong>
+      <p style="margin: var(--space-xs) 0 0 0; font-size: 0.9rem;">
+        Halaman ini hanya untuk administrator sistem.
+        Akses tanpa otorisasi akan dilaporkan.
+      </p>
+    </div>
+    
+    <!-- LOGIN FORM -->
+    <div style="margin: var(--space-xl) 0;">
+      <div style="margin-bottom: var(--space-lg);">
+        <label class="input-label">Email Admin</label>
+        <input type="email" id="adminEmail" class="input" placeholder="admin@rewardshareio.com">
+      </div>
+      
+      <div style="margin-bottom: var(--space-lg);">
+        <label class="input-label">Password</label>
+        <input type="password" id="adminPassword" class="input" placeholder="••••••••">
+      </div>
+      
+      <button onclick="adminLogin()" class="btn btn-primary btn-full">
+        🔓 Login as Admin
+      </button>
+      <p id="adminLoginMsg" class="text-danger" style="text-align: center; margin-top: var(--space-md);"></p>
+    </div>
+    
+    <!-- BACK TO USER LOGIN -->
+    <div style="text-align: center; margin-top: var(--space-xl); padding-top: var(--space-lg); border-top: 1px solid var(--border-color);">
+      <p class="text-muted" style="margin-bottom: var(--space-sm);">User biasa?</p>
+      <a href="login.html" class="btn btn-sm btn-outline">
+        ← Kembali ke User Login
+      </a>
+    </div>
+    
+  </div>
+</div>
+
+<!-- SCRIPTS -->
+<script type="module" src="login-admin.js"></script>
+</body>
+</html>
+<!-- file content end -->
