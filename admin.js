@@ -611,6 +611,17 @@ async function approveDeposit(depositId) {
       totalDeposit: increment(deposit.amount)
     });
 
+    // Log admin action
+    try {
+      await addDoc(collection(db, 'adminLogs'), {
+        adminId: currentAdmin.uid,
+        action: 'approveDeposit',
+        targetId: depositId,
+        details: { userId: deposit.userId, amount: deposit.amount },
+        timestamp: serverTimestamp()
+      });
+    } catch (e) { console.warn('admin log failed', e); }
+
     showNotification('Deposit disetujui dan saldo dikunci selama 3 hari', 'success');
     await loadPendingDeposits();
   } catch (error) {
@@ -630,6 +641,18 @@ async function rejectDeposit(depositId, reason = '') {
       rejectedBy: currentAdmin.uid,
       rejectedReason: reason
     });
+
+    // Log admin action
+    try {
+      await addDoc(collection(db, 'adminLogs'), {
+        adminId: currentAdmin.uid,
+        action: 'rejectDeposit',
+        targetId: depositId,
+        details: { reason },
+        timestamp: serverTimestamp()
+      });
+    } catch (e) { console.warn('admin log failed', e); }
+
     showNotification('Deposit ditolak', 'success');
     await loadPendingDeposits();
   } catch (error) {
@@ -922,6 +945,18 @@ async function approveProof(proofId) {
     const snap = await getDoc(proofRef);
     if (!snap.exists()) throw new Error('Proof tidak ditemukan');
     await updateDoc(proofRef, { status: 'approved', approvedAt: new Date(), approvedBy: currentAdmin.uid });
+
+    // Log admin action
+    try {
+      await addDoc(collection(db, 'adminLogs'), {
+        adminId: currentAdmin.uid,
+        action: 'approveProof',
+        targetId: proofId,
+        details: { proofId },
+        timestamp: serverTimestamp()
+      });
+    } catch (e) { console.warn('admin log failed', e); }
+
     showNotification('Proof disetujui', 'success');
     await loadPendingUserProofs();
   } catch (error) {
@@ -935,6 +970,18 @@ async function rejectProof(proofId, reason = '') {
     if (!confirm('Reject bukti task ini?')) return;
     const proofRef = doc(db, 'taskProofs', proofId);
     await updateDoc(proofRef, { status: 'rejected', rejectedAt: new Date(), rejectedBy: currentAdmin.uid, rejectedReason: reason });
+
+    // Log admin action
+    try {
+      await addDoc(collection(db, 'adminLogs'), {
+        adminId: currentAdmin.uid,
+        action: 'rejectProof',
+        targetId: proofId,
+        details: { reason },
+        timestamp: serverTimestamp()
+      });
+    } catch (e) { console.warn('admin log failed', e); }
+
     showNotification('Proof ditolak', 'success');
     await loadPendingUserProofs();
   } catch (error) {
@@ -998,6 +1045,17 @@ async function approveWithdraw(withdrawId) {
     const userRef = doc(db, 'users', w.userId);
     await updateDoc(userRef, { mainBalance: increment((w.amount || 0) * -1), totalWithdraw: increment(w.amount || 0) });
 
+    // Log admin action
+    try {
+      await addDoc(collection(db, 'adminLogs'), {
+        adminId: currentAdmin.uid,
+        action: 'approveWithdraw',
+        targetId: withdrawId,
+        details: { userId: w.userId, amount: w.amount },
+        timestamp: serverTimestamp()
+      });
+    } catch (e) { console.warn('admin log failed', e); }
+
     showNotification('Withdrawal disetujui', 'success');
     await loadPendingWithdrawals();
   } catch (error) {
@@ -1011,6 +1069,18 @@ async function rejectWithdraw(withdrawId, reason = '') {
     if (!confirm('Reject permintaan withdraw ini?')) return;
     const wRef = doc(db, 'withdrawals', withdrawId);
     await updateDoc(wRef, { status: 'rejected', rejectedAt: new Date(), rejectedBy: currentAdmin.uid, rejectedReason: reason });
+
+    // Log admin action
+    try {
+      await addDoc(collection(db, 'adminLogs'), {
+        adminId: currentAdmin.uid,
+        action: 'rejectWithdraw',
+        targetId: withdrawId,
+        details: { reason },
+        timestamp: serverTimestamp()
+      });
+    } catch (e) { console.warn('admin log failed', e); }
+
     showNotification('Withdrawal ditolak', 'success');
     await loadPendingWithdrawals();
   } catch (error) {
@@ -1069,6 +1139,16 @@ async function makeAdmin(userId) {
     if (!confirm('Jadikan user ini admin?')) return;
     const uRef = doc(db, 'users', userId);
     await updateDoc(uRef, { role: 'admin', isAdmin: true });
+
+    try {
+      await addDoc(collection(db, 'adminLogs'), {
+        adminId: currentAdmin.uid,
+        action: 'makeAdmin',
+        targetId: userId,
+        timestamp: serverTimestamp()
+      });
+    } catch (e) { console.warn('admin log failed', e); }
+
     showNotification('User dijadikan admin', 'success');
     await loadUsers();
   } catch (error) {
@@ -1082,6 +1162,16 @@ async function revokeAdmin(userId) {
     if (!confirm('Cabut akses admin user ini?')) return;
     const uRef = doc(db, 'users', userId);
     await updateDoc(uRef, { role: 'user', isAdmin: false });
+
+    try {
+      await addDoc(collection(db, 'adminLogs'), {
+        adminId: currentAdmin.uid,
+        action: 'revokeAdmin',
+        targetId: userId,
+        timestamp: serverTimestamp()
+      });
+    } catch (e) { console.warn('admin log failed', e); }
+
     showNotification('Akses admin dicabut', 'success');
     await loadUsers();
   } catch (error) {

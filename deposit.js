@@ -316,14 +316,11 @@ async function submitDeposit() {
   }
 }
 
-// Simulasi upload ke IMGG
+import { uploadToIMGG as realUploadToIMGG } from './imgg.js';
+
+// Wrapper that calls the real IMGG uploader (with fallback behavior inside imgg.js)
 async function uploadToIMGG(file) {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const randomId = Math.random().toString(36).substring(7);
-      resolve(`https://i.imgg.com/${randomId}.jpg`);
-    }, 1000);
-  });
+  return realUploadToIMGG(file);
 }
 
 // Reset form

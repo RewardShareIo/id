@@ -471,16 +471,11 @@ async function submitTaskProof() {
   }
 }
 
-// Simulasi upload ke IMGG
+import { uploadToIMGG as realUploadToIMGG } from './imgg.js';
+
+// Wrapper that calls the real IMGG uploader
 async function uploadToIMGG(file) {
-  // Note: Ini adalah simulasi
-  // Di implementasi asli, Anda akan menggunakan API IMGG
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const randomId = Math.random().toString(36).substring(7);
-      resolve(`https://i.imgg.com/${randomId}.jpg`);
-    }, 1000);
-  });
+  return realUploadToIMGG(file);
 }
 
 // Show notification
