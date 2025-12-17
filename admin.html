@@ -328,6 +328,56 @@
     </div>
   </div>
 
+  <!-- FIRESTORE INDEX HELP -->
+  <div style="margin-top: var(--space-xl);">
+    <div class="card">
+      <h3>🔧 Firestore Indexes</h3>
+      <p class="text-muted">Beberapa query membutuhkan composite index untuk performa dan agar tidak error. Klik <strong>Buka Console</strong> untuk menuju halaman Indexes di Firebase Console, atau gunakan tombol <strong>Copy Spec</strong> untuk menyalin spesifikasi index.</p>
+      <div style="display: grid; gap: var(--space-sm); margin-top: var(--space-md);">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <strong>deposits</strong> — where(userId ==) + orderBy(createdAt desc)
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-sm btn-outline" onclick="openIndexConsole()">Buka Console</button>
+            <button class="btn btn-sm" onclick="copyIndexSpec('deposits')">Copy Spec</button>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <strong>withdrawals</strong> — where(userId ==) + orderBy(createdAt desc)
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-sm btn-outline" onclick="openIndexConsole()">Buka Console</button>
+            <button class="btn btn-sm" onclick="copyIndexSpec('withdrawals')">Copy Spec</button>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <strong>taskProofs</strong> — where(userId ==) + orderBy(submittedAt desc)
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-sm btn-outline" onclick="openIndexConsole()">Buka Console</button>
+            <button class="btn btn-sm" onclick="copyIndexSpec('taskProofs')">Copy Spec</button>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <strong>referrals</strong> — where(referrerId ==) + orderBy(date desc)
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-sm btn-outline" onclick="openIndexConsole()">Buka Console</button>
+            <button class="btn btn-sm" onclick="copyIndexSpec('referrals')">Copy Spec</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== TAB 2: PAYMENT METHODS ==================== -->
   <div id="payment-methods" class="tab-content">
     <div class="card">

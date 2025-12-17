@@ -605,5 +605,70 @@ async function rejectTaskProof(proofId, reason = '') {
   }
 }
 
+// Index helper functions for admin
+function openIndexConsole() {
+  try {
+    const url = 'https://console.firebase.google.com/project/_/firestore/indexes';
+    window.open(url, '_blank');
+  } catch (e) {
+    console.error('Failed to open Firebase Console:', e);
+    showNotification('Gagal membuka Firebase Console', 'error');
+  }
+}
+
+function copyIndexSpec(name) {
+  const specs = {
+    deposits: JSON.stringify({
+      collectionId: 'deposits',
+      fields: [{fieldPath: 'userId', order: null}, {fieldPath: 'createdAt', order: 'desc'}]
+    }, null, 2),
+    withdrawals: JSON.stringify({
+      collectionId: 'withdrawals',
+      fields: [{fieldPath: 'userId', order: null}, {fieldPath: 'createdAt', order: 'desc'}]
+    }, null, 2),
+    taskProofs: JSON.stringify({
+      collectionId: 'taskProofs',
+      fields: [{fieldPath: 'userId', order: null}, {fieldPath: 'submittedAt', order: 'desc'}]
+    }, null, 2),
+    referrals: JSON.stringify({
+      collectionId: 'referrals',
+      fields: [{fieldPath: 'referrerId', order: null}, {fieldPath: 'date', order: 'desc'}]
+    }, null, 2)
+  };
+
+  const text = specs[name] || '';
+  if (!text) {
+    showNotification('Spec index tidak ditemukan', 'error');
+    return;
+  }
+
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(() => {
+      showNotification('Spec index disalin ke clipboard', 'success');
+    }).catch((err) => {
+      console.error('Clipboard write failed:', err);
+      showNotification('Gagal menyalin ke clipboard', 'error');
+    });
+  } else {
+    // Fallback
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      document.execCommand('copy');
+      showNotification('Spec index disalin ke clipboard', 'success');
+    } catch (e) {
+      console.error('Fallback copy failed:', e);
+      showNotification('Gagal menyalin spec index', 'error');
+    }
+    ta.remove();
+  }
+}
+
+// Expose index helpers to window for buttons
+window.openIndexConsole = openIndexConsole;
+window.copyIndexSpec = copyIndexSpec;
+
 // ... dan seterusnya untuk fungsi-fungsi lainnya
 // file content end
