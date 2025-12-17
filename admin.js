@@ -13,10 +13,36 @@ let adminData = null;
 // Check admin authentication
 async function checkAdminAuth() {
   try {
+    console.log('admin: checkAdminAuth start, waiting authInit...');
+    // Wait for Firebase auth initialization
+    await authInitPromise;
+
     currentAdmin = auth.currentUser;
+    console.log('admin: currentAdmin after init', currentAdmin && currentAdmin.uid);
+
+    // If no currentAdmin, wait briefly for any incoming auth state
     if (!currentAdmin) {
-      window.location.href = 'login-admin.html';
-      return;
+      await new Promise((resolve) => {
+        let resolved = false;
+        const timeout = setTimeout(() => {
+          if (!resolved) { resolved = true; resolve(); }
+        }, 1500);
+        const unsub = onAuthStateChanged(auth, (u) => {
+          if (u && !resolved) {
+            currentAdmin = u;
+            resolved = true;
+            clearTimeout(timeout);
+            unsub();
+            resolve();
+          }
+        });
+      });
+
+      if (!currentAdmin) {
+        // Final check failed, redirect to login-admin
+        window.location.href = 'login-admin.html';
+        return;
+      }
     }
 
     const adminDoc = await getDoc(doc(db, "users", currentAdmin.uid));
@@ -25,6 +51,8 @@ async function checkAdminAuth() {
       
       // Verify admin role
       if (!adminData.isAdmin && adminData.role !== 'admin') {
+        // mark last admin signout to avoid immediate redirect loops
+        try { sessionStorage.setItem('lastAdminSignout', Date.now().toString()); } catch (e) {}
         await signOut(auth);
         window.location.href = 'login-admin.html';
         return;
@@ -40,12 +68,14 @@ async function checkAdminAuth() {
       loadTab('dashboard');
       
     } else {
+      try { sessionStorage.setItem('lastAdminSignout', Date.now().toString()); } catch (e) {}
       await signOut(auth);
       window.location.href = 'login-admin.html';
     }
   } catch (error) {
     console.error("Error checking admin auth:", error);
-    window.location.href = 'login-admin.html';
+    // do not immediately redirect when there is a transient error; show notification instead
+    showNotification("Error memeriksa admin: " + (error.message || error), "error");
   }
 }
 
