@@ -499,6 +499,7 @@ window.rejectDeposit = rejectDeposit;
 window.approveWithdraw = approveWithdraw;
 window.approveTaskProof = approveTaskProof;
 window.rejectTaskProof = rejectTaskProof;
+window.loadPendingDeposits = loadPendingDeposits;
 
 // Note: Fungsi-fungsi spesifik untuk setiap tab (loadPaymentMethods, loadPendingDeposits, dll)
 // akan diimplementasikan sesuai kebutuhan masing-masing tab.
@@ -512,8 +513,78 @@ async function loadPaymentMethods() {
 }
 
 async function loadPendingDeposits() {
-  // Implementasi loading pending deposits
-  console.log("Loading pending deposits...");
+  try {
+    const searchText = (document.getElementById('searchDeposit')?.value || '').toLowerCase().trim();
+    const statusFilter = document.getElementById('filterDepositStatus')?.value || 'pending';
+
+    // Build query
+    let depositsQuery;
+    if (statusFilter === 'all') {
+      depositsQuery = query(collection(db, 'deposits'), orderBy('createdAt', 'desc'), limit(100));
+    } else {
+      depositsQuery = query(collection(db, 'deposits'), where('status', '==', statusFilter), orderBy('createdAt', 'desc'), limit(100));
+    }
+
+    const snapshot = await getDocs(depositsQuery);
+    const deposits = [];
+    snapshot.forEach(d => deposits.push({ id: d.id, ...d.data() }));
+
+    // Client-side search filtering
+    const filtered = deposits.filter(dep => {
+      if (!searchText) return true;
+      const code = String(dep.depositCode || '').toLowerCase();
+      const email = String(dep.userEmail || '').toLowerCase();
+      const name = String(dep.userName || '').toLowerCase();
+      return code.includes(searchText) || email.includes(searchText) || name.includes(searchText);
+    });
+
+    const container = document.getElementById('depositsContainer');
+    if (!container) return;
+
+    if (filtered.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state" style="text-align: center; padding: var(--space-2xl);">
+          <div style="font-size: 3rem; margin-bottom: var(--space-md);">✅</div>
+          <h3>Tidak ada deposit sesuai filter</h3>
+          <p class="text-muted">Gunakan kata kunci lain atau periksa filter status</p>
+        </div>
+      `;
+      return;
+    }
+
+    let html = '<div style="display: grid; gap: 12px;">';
+    for (const dep of filtered) {
+      const date = dep.createdAt?.toDate ? dep.createdAt.toDate().toLocaleString('id-ID') : (dep.createdAt || '-');
+      const statusClass = dep.status === 'approved' ? 'status-approved' : dep.status === 'rejected' ? 'status-rejected' : 'status-pending';
+      html += `
+        <div class="pending-item" style="align-items: center;">
+          <div style="flex:1;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div style="font-weight:700;">${dep.depositCode || '-'} <span class="badge ${statusClass}">${dep.status}</span></div>
+              <div style="color:var(--text-muted);">${date}</div>
+            </div>
+            <div style="margin-top:6px; color:var(--text-muted);">
+              <div><strong>Pengirim:</strong> ${dep.userName || dep.userEmail || '-'}</div>
+              <div><strong>Jumlah:</strong> Rp${(dep.amount || 0).toLocaleString('id-ID')}</div>
+              <div><strong>Metode:</strong> ${dep.method || '-'}</div>
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            ${dep.proofUrl ? `<a href="${dep.proofUrl}" target="_blank" class="btn btn-sm btn-outline">👁️ Lihat Bukti</a>` : ''}
+            <button class="btn btn-sm btn-success" onclick="approveDeposit('${dep.id}')">Approve</button>
+            <button class="btn btn-sm btn-danger" onclick="(function(){ const reason = prompt('Alasan reject (opsional):'); window.rejectDeposit('${dep.id}', reason); })()">Reject</button>
+          </div>
+        </div>
+      `;
+    }
+    html += '</div>';
+    container.innerHTML = html;
+
+    if (window.appendAuthDebug) window.appendAuthDebug('loadPendingDeposits: loaded ' + filtered.length + ' items');
+  } catch (error) {
+    console.error('Error loading pending deposits:', error);
+    showNotification('Gagal memuat deposits: ' + (error.message || error), 'error');
+  }
 }
 
 // Approve a deposit (admin)
