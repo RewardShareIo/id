@@ -797,58 +797,414 @@ function copyIndexSpec(name) {
 window.openIndexConsole = openIndexConsole;
 window.copyIndexSpec = copyIndexSpec;
 
-// Placeholder implementations for tabs and actions that are not yet implemented
-// These prevent ReferenceErrors and provide user-friendly messages
+// Implementations for tabs and admin actions (basic functionality)
+// These provide a minimal, useful admin UX and can be extended later
+
 async function loadAdvertiserTasks() {
-  console.log('loadAdvertiserTasks: placeholder called');
-  if (window.appendAuthDebug) window.appendAuthDebug('loadAdvertiserTasks: placeholder');
-  showNotification('Fitur Approve Advertiser Tasks belum tersedia', 'info');
+  try {
+    const tasksSnapshot = await getDocs(query(collection(db, 'tasks'), orderBy('createdAt', 'desc'), limit(100)));
+    const tasks = [];
+    tasksSnapshot.forEach(d => tasks.push({ id: d.id, ...d.data() }));
+    const container = document.getElementById('approve-advertiser-tasks') || document.getElementById('approve-advertiser-tasks');
+    // For now, show a quick list in recentAdminTasks area if specific container not found
+    const target = document.getElementById('recentAdminTasks') || container;
+    if (!target) return;
+    if (tasks.length === 0) {
+      target.innerHTML = `<div class="empty-state" style="text-align:center; padding:var(--space-2xl);">
+        <div style="font-size:3rem; margin-bottom:var(--space-md);">📭</div>
+        <h3>Tidak ada task advertiser</h3>
+        <p class="text-muted">Tidak ditemukan task dari advertiser saat ini</p>
+      </div>`;
+      return;
+    }
+    let html = '<div style="display:grid; gap:12px;">';
+    for (const t of tasks.slice(0, 30)) {
+      const date = t.createdAt?.toDate ? t.createdAt.toDate().toLocaleString('id-ID') : (t.createdAt || '-');
+      html += `<div class="pending-item">
+        <div style="flex:1;">
+          <div style="font-weight:700;">${escapeHtml(t.title || '(no title)')}</div>
+          <div style="color:var(--text-muted);">${date} • ${t.userEmail || t.userId || ''}</div>
+        </div>
+      </div>`;
+    }
+    html += '</div>';
+    target.innerHTML = html;
+    if (window.appendAuthDebug) window.appendAuthDebug('loadAdvertiserTasks: loaded ' + tasks.length + ' items');
+  } catch (error) {
+    console.error('Error loading advertiser tasks:', error);
+    showNotification('Gagal memuat advertiser tasks', 'error');
+  }
 }
 
 async function loadRecentAdminTasks() {
-  console.log('loadRecentAdminTasks: placeholder called');
-  if (window.appendAuthDebug) window.appendAuthDebug('loadRecentAdminTasks: placeholder');
-  showNotification('Fitur Recent Admin Tasks belum tersedia', 'info');
+  try {
+    const q = query(collection(db, 'adminTasks'), orderBy('createdAt', 'desc'), limit(30));
+    const snapshot = await getDocs(q);
+    const tasks = [];
+    snapshot.forEach(d => tasks.push({ id: d.id, ...d.data() }));
+    const target = document.getElementById('recentAdminTasks');
+    if (!target) return;
+    if (tasks.length === 0) {
+      target.innerHTML = `<div class="text-muted">Belum ada task admin terbaru</div>`;
+      return;
+    }
+    let html = '<div style="display:grid; gap:12px;">';
+    for (const t of tasks) {
+      const date = t.createdAt?.toDate ? t.createdAt.toDate().toLocaleString('id-ID') : (t.createdAt || '-');
+      html += `<div class="pending-item">
+        <div style="flex:1;">
+          <div style="font-weight:700;">${escapeHtml(t.title || '(no title)')}</div>
+          <div style="color:var(--text-muted);">${date}</div>
+        </div>
+      </div>`;
+    }
+    html += '</div>';
+    target.innerHTML = html;
+    if (window.appendAuthDebug) window.appendAuthDebug('loadRecentAdminTasks: loaded ' + tasks.length + ' items');
+  } catch (error) {
+    console.error('Error loading recent admin tasks:', error);
+  }
 }
 
 async function loadPendingUserProofs() {
-  console.log('loadPendingUserProofs: placeholder called');
-  if (window.appendAuthDebug) window.appendAuthDebug('loadPendingUserProofs: placeholder');
-  showNotification('Fitur Pending User Proofs belum tersedia', 'info');
+  try {
+    const proofType = document.getElementById('filterProofType')?.value || '';
+    const statusFilter = document.getElementById('filterProofStatus')?.value || 'pending';
+    let q;
+    if (statusFilter === 'all') {
+      q = query(collection(db, 'taskProofs'), orderBy('submittedAt', 'desc'), limit(100));
+    } else {
+      q = query(collection(db, 'taskProofs'), where('status', '==', statusFilter), orderBy('submittedAt', 'desc'), limit(100));
+    }
+    const snapshot = await getDocs(q);
+    const items = [];
+    snapshot.forEach(d => items.push({ id: d.id, ...d.data() }));
+    // Client-side proof type filter
+    const filtered = proofType ? items.filter(i => i.taskType === proofType) : items;
+    const container = document.getElementById('userProofsContainer');
+    if (!container) return;
+    if (filtered.length === 0) {
+      container.innerHTML = `<div class="empty-state" style="text-align:center; padding:var(--space-2xl);">
+        <div style="font-size:3rem; margin-bottom:var(--space-md);">📝</div>
+        <h3>Tidak ada bukti task sesuai filter</h3>
+        <p class="text-muted">Gunakan filter atau coba lagi nanti</p>
+      </div>`;
+      return;
+    }
+    let html = '<div style="display:grid; gap:12px;">';
+    for (const it of filtered) {
+      const date = it.submittedAt?.toDate ? it.submittedAt.toDate().toLocaleString('id-ID') : (it.submittedAt || '-');
+      html += `<div class="pending-item" style="align-items:center;">
+        <div style="flex:1;">
+          <div style="font-weight:700;">${escapeHtml(it.taskTitle || it.taskType || 'Task')}</div>
+          <div style="color:var(--text-muted);">${it.userEmail || it.userId || '-'} • ${date}</div>
+          ${it.proofUrl ? `<div style="margin-top:6px;"><a href="${it.proofUrl}" target="_blank">Lihat bukti</a></div>` : ''}
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="btn btn-sm btn-success" onclick="approveProof('${it.id}')">Approve</button>
+          <button class="btn btn-sm btn-danger" onclick="(function(){ const reason = prompt('Alasan reject (opsional):'); window.rejectProof('${it.id}', reason); })()">Reject</button>
+        </div>
+      </div>`;
+    }
+    html += '</div>';
+    container.innerHTML = html;
+    if (window.appendAuthDebug) window.appendAuthDebug('loadPendingUserProofs: loaded ' + filtered.length + ' items');
+  } catch (error) {
+    console.error('Error loading user proofs:', error);
+    showNotification('Gagal memuat bukti task', 'error');
+  }
+}
+
+async function approveProof(proofId) {
+  try {
+    if (!confirm('Approve bukti task ini?')) return;
+    const proofRef = doc(db, 'taskProofs', proofId);
+    const snap = await getDoc(proofRef);
+    if (!snap.exists()) throw new Error('Proof tidak ditemukan');
+    await updateDoc(proofRef, { status: 'approved', approvedAt: new Date(), approvedBy: currentAdmin.uid });
+    showNotification('Proof disetujui', 'success');
+    await loadPendingUserProofs();
+  } catch (error) {
+    console.error('Error approving proof:', error);
+    showNotification('Gagal approve proof: ' + (error.message || error), 'error');
+  }
+}
+
+async function rejectProof(proofId, reason = '') {
+  try {
+    if (!confirm('Reject bukti task ini?')) return;
+    const proofRef = doc(db, 'taskProofs', proofId);
+    await updateDoc(proofRef, { status: 'rejected', rejectedAt: new Date(), rejectedBy: currentAdmin.uid, rejectedReason: reason });
+    showNotification('Proof ditolak', 'success');
+    await loadPendingUserProofs();
+  } catch (error) {
+    console.error('Error rejecting proof:', error);
+    showNotification('Gagal reject proof: ' + (error.message || error), 'error');
+  }
 }
 
 async function loadPendingWithdrawals() {
-  console.log('loadPendingWithdrawals: placeholder called');
-  if (window.appendAuthDebug) window.appendAuthDebug('loadPendingWithdrawals: placeholder');
-  showNotification('Fitur Pending Withdrawals belum tersedia', 'info');
+  try {
+    const q = query(collection(db, 'withdrawals'), where('status', '==', 'pending'), orderBy('createdAt', 'desc'), limit(100));
+    const snapshot = await getDocs(q);
+    const items = [];
+    snapshot.forEach(d => items.push({ id: d.id, ...d.data() }));
+    const container = document.getElementById('withdrawalsContainer');
+    if (!container) return;
+    if (items.length === 0) {
+      container.innerHTML = `<div class="empty-state" style="text-align:center; padding:var(--space-2xl);">
+        <div style="font-size:3rem; margin-bottom:var(--space-md);">💰</div>
+        <h3>Tidak ada withdraw pending</h3>
+        <p class="text-muted">Semua permintaan penarikan sudah diproses</p>
+      </div>`;
+      return;
+    }
+    let html = '<div style="display:grid; gap:12px;">';
+    for (const w of items) {
+      const date = w.createdAt?.toDate ? w.createdAt.toDate().toLocaleString('id-ID') : (w.createdAt || '-');
+      html += `<div class="pending-item" style="align-items:center;">
+        <div style="flex:1;">
+          <div style="font-weight:700;">${w.userEmail || w.userId || '-'} <span class="badge status-pending">${w.status}</span></div>
+          <div style="color:var(--text-muted);">${date}</div>
+          <div style="margin-top:6px; color:var(--text-muted);">Jumlah: Rp${(w.amount || 0).toLocaleString('id-ID')}</div>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <button class="btn btn-sm btn-success" onclick="approveWithdraw('${w.id}')">Approve</button>
+          <button class="btn btn-sm btn-danger" onclick="(function(){ const reason = prompt('Alasan reject (opsional):'); window.rejectWithdraw('${w.id}', reason); })()">Reject</button>
+        </div>
+      </div>`;
+    }
+    html += '</div>';
+    container.innerHTML = html;
+    if (window.appendAuthDebug) window.appendAuthDebug('loadPendingWithdrawals: loaded ' + items.length + ' items');
+  } catch (error) {
+    console.error('Error loading pending withdrawals:', error);
+    showNotification('Gagal memuat withdrawals', 'error');
+  }
+}
+
+async function approveWithdraw(withdrawId) {
+  try {
+    if (!confirm('Approve permintaan withdraw ini?')) return;
+    const wRef = doc(db, 'withdrawals', withdrawId);
+    const wSnap = await getDoc(wRef);
+    if (!wSnap.exists()) throw new Error('Withdrawal not found');
+    const w = wSnap.data();
+
+    // Mark approved
+    await updateDoc(wRef, { status: 'approved', approvedAt: new Date(), approvedBy: currentAdmin.uid });
+
+    // Deduct user balance
+    const userRef = doc(db, 'users', w.userId);
+    await updateDoc(userRef, { mainBalance: increment((w.amount || 0) * -1), totalWithdraw: increment(w.amount || 0) });
+
+    showNotification('Withdrawal disetujui', 'success');
+    await loadPendingWithdrawals();
+  } catch (error) {
+    console.error('Error approving withdrawal:', error);
+    showNotification('Gagal approve withdrawal: ' + (error.message || error), 'error');
+  }
+}
+
+async function rejectWithdraw(withdrawId, reason = '') {
+  try {
+    if (!confirm('Reject permintaan withdraw ini?')) return;
+    const wRef = doc(db, 'withdrawals', withdrawId);
+    await updateDoc(wRef, { status: 'rejected', rejectedAt: new Date(), rejectedBy: currentAdmin.uid, rejectedReason: reason });
+    showNotification('Withdrawal ditolak', 'success');
+    await loadPendingWithdrawals();
+  } catch (error) {
+    console.error('Error rejecting withdrawal:', error);
+    showNotification('Gagal reject withdrawal: ' + (error.message || error), 'error');
+  }
 }
 
 async function loadUsers() {
-  console.log('loadUsers: placeholder called');
-  if (window.appendAuthDebug) window.appendAuthDebug('loadUsers: placeholder');
-  showNotification('Fitur User Management belum tersedia', 'info');
+  try {
+    const roleFilter = document.getElementById('filterUserRole')?.value || 'all';
+    const searchText = (document.getElementById('searchUser')?.value || '').toLowerCase().trim();
+    let q = query(collection(db, 'users'), orderBy('email', 'asc'), limit(200));
+    const snapshot = await getDocs(q);
+    const users = [];
+    snapshot.forEach(d => users.push({ id: d.id, ...d.data() }));
+    const filtered = users.filter(u => {
+      if (roleFilter !== 'all' && (u.role || 'user') !== roleFilter) return false;
+      if (!searchText) return true;
+      return (u.email || '').toLowerCase().includes(searchText) || (u.username || '').toLowerCase().includes(searchText) || (u.id || '').toLowerCase().includes(searchText);
+    });
+    const container = document.getElementById('usersContainer');
+    if (!container) return;
+    if (filtered.length === 0) {
+      container.innerHTML = `<div class="empty-state" style="text-align:center; padding:var(--space-2xl);">
+        <div style="font-size:3rem; margin-bottom:var(--space-md);">👤</div>
+        <h3>Tidak ada user sesuai filter</h3>
+        <p class="text-muted">Gunakan kata kunci lain atau periksa filter</p>
+      </div>`;
+      return;
+    }
+    let html = '<div style="display:grid; gap:12px;">';
+    for (const u of filtered) {
+      html += `<div class="pending-item" style="align-items:center;">
+        <div style="flex:1;">
+          <div style="font-weight:700;">${escapeHtml(u.email || u.username || u.id)}</div>
+          <div style="color:var(--text-muted);">Role: ${u.role || 'user'} • Balance: Rp${formatCurrency(u.mainBalance || 0)}</div>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          ${u.role !== 'admin' ? `<button class="btn btn-sm" onclick="makeAdmin('${u.id}')">Make Admin</button>` : `<button class="btn btn-sm btn-outline" onclick="revokeAdmin('${u.id}')">Revoke Admin</button>`}
+          <button class="btn btn-sm btn-outline" onclick="viewUser('${u.id}')">Detail</button>
+        </div>
+      </div>`;
+    }
+    html += '</div>';
+    container.innerHTML = html;
+    if (window.appendAuthDebug) window.appendAuthDebug('loadUsers: loaded ' + filtered.length + ' users');
+  } catch (error) {
+    console.error('Error loading users:', error);
+    showNotification('Gagal memuat users: ' + (error.message || error), 'error');
+  }
 }
 
+async function makeAdmin(userId) {
+  try {
+    if (!confirm('Jadikan user ini admin?')) return;
+    const uRef = doc(db, 'users', userId);
+    await updateDoc(uRef, { role: 'admin', isAdmin: true });
+    showNotification('User dijadikan admin', 'success');
+    await loadUsers();
+  } catch (error) {
+    console.error('Error making admin:', error);
+    showNotification('Gagal mengubah role user', 'error');
+  }
+}
+
+async function revokeAdmin(userId) {
+  try {
+    if (!confirm('Cabut akses admin user ini?')) return;
+    const uRef = doc(db, 'users', userId);
+    await updateDoc(uRef, { role: 'user', isAdmin: false });
+    showNotification('Akses admin dicabut', 'success');
+    await loadUsers();
+  } catch (error) {
+    console.error('Error revoking admin:', error);
+    showNotification('Gagal mengubah role user', 'error');
+  }
+}
+
+function viewUser(userId) {
+  // Minimal detail view: open a prompt with basic info
+  (async () => {
+    try {
+      const uSnap = await getDoc(doc(db, 'users', userId));
+      if (!uSnap.exists()) return alert('User tidak ditemukan');
+      const u = uSnap.data();
+      alert(`User: ${u.email || userId}\nRole: ${u.role || 'user'}\nBalance: Rp${formatCurrency(u.mainBalance || 0)}\nUID: ${userId}`);
+    } catch (e) { console.error(e); }
+  })();
+}
+
+// Search helper bound to UI button
+function searchUsers() {
+  loadUsers();
+}
+window.searchUsers = searchUsers;
+
 async function loadSystemLogs() {
-  console.log('loadSystemLogs: placeholder called');
-  if (window.appendAuthDebug) window.appendAuthDebug('loadSystemLogs: placeholder');
-  showNotification('Fitur System Logs belum tersedia', 'info');
+  try {
+    // Read debug log textarea if available
+    const dbg = document.getElementById('dbgLog');
+    let lines = [];
+    if (dbg) {
+      lines = dbg.textContent && dbg.textContent !== '(log empty)' ? dbg.textContent.split('\n') : [];
+    }
+    const filterType = document.getElementById('filterLogType')?.value || 'all';
+    const filterDate = document.getElementById('filterLogDate')?.value || '';
+    const container = document.getElementById('logsContainer');
+    if (!container) return;
+    if (lines.length === 0) {
+      container.innerHTML = `<div class="empty-state" style="text-align:center; padding:var(--space-2xl);">
+        <div style="font-size:3rem; margin-bottom:var(--space-md);">📄</div>
+        <h3>Belum ada log sistem</h3>
+        <p class="text-muted">Log akan muncul saat ada aktivitas di sistem</p>
+      </div>`;
+      return;
+    }
+    // Parse lines like "2025-12-17T05:31:46.216Z - message"
+    const parsed = lines.map(l => {
+      const idx = l.indexOf(' - ');
+      if (idx === -1) return { raw: l };
+      return { ts: l.slice(0, idx), msg: l.slice(idx + 3), raw: l };
+    });
+    const filtered = parsed.filter(p => {
+      if (filterDate) {
+        const d = p.ts ? p.ts.slice(0,10) : null;
+        if (d !== filterDate) return false;
+      }
+      if (filterType && filterType !== 'all') {
+        return (p.msg || '').toLowerCase().includes(filterType);
+      }
+      return true;
+    });
+    let html = '<div style="display:grid; gap:8px;">';
+    for (const p of filtered) {
+      html += `<div style="padding:8px; border-radius:6px; background:rgba(255,255,255,0.02); font-size:13px;"><div style="font-weight:700">${p.ts || ''}</div><div style="color:var(--text-muted);">${escapeHtml(p.msg || p.raw)}</div></div>`;
+    }
+    html += '</div>';
+    container.innerHTML = html;
+    if (window.appendAuthDebug) window.appendAuthDebug('loadSystemLogs: loaded ' + filtered.length + ' lines');
+  } catch (error) {
+    console.error('Error loading system logs:', error);
+    showNotification('Gagal memuat logs', 'error');
+  }
+}
+
+function exportLogs() {
+  try {
+    const dbg = document.getElementById('dbgLog');
+    const text = dbg ? (dbg.textContent || '') : '';
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `system-logs-${new Date().toISOString()}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    if (window.appendAuthDebug) window.appendAuthDebug('exportLogs: exported ' + (text ? text.split('\n').length : 0) + ' lines');
+  } catch (error) {
+    console.error('Error exporting logs:', error);
+    showNotification('Gagal export logs', 'error');
+  }
 }
 
 function showAddMethodModal() {
-  console.log('showAddMethodModal: placeholder called');
-  if (window.appendAuthDebug) window.appendAuthDebug('showAddMethodModal: placeholder');
-  // Show a simple modal or notification as fallback
-  showNotification('Form tambah payment method belum tersedia', 'info');
+  const modal = document.getElementById('methodModal');
+  if (!modal) return showNotification('Form tambah payment method belum tersedia', 'info');
+  modal.classList.add('open');
+  document.getElementById('methodModalTitle').textContent = 'Tambah Metode Pembayaran';
 }
 
-// Export placeholders to window so onclick handlers work
+// Small helpers
+function escapeHtml(s) {
+  if (!s) return '';
+  return String(s).replace(/[&<>\"']/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c]; });
+}
+
+// Expose implementations to window so onclick handlers still work
 window.loadAdvertiserTasks = loadAdvertiserTasks;
 window.loadRecentAdminTasks = loadRecentAdminTasks;
 window.loadPendingUserProofs = loadPendingUserProofs;
 window.loadPendingWithdrawals = loadPendingWithdrawals;
 window.loadUsers = loadUsers;
 window.loadSystemLogs = loadSystemLogs;
+window.exportLogs = exportLogs;
+window.approveWithdraw = approveWithdraw;
+window.rejectWithdraw = rejectWithdraw;
+window.approveProof = approveProof;
+window.rejectProof = rejectProof;
+window.makeAdmin = makeAdmin;
+window.revokeAdmin = revokeAdmin;
+window.viewUser = viewUser;
 window.showAddMethodModal = showAddMethodModal;
 window.loadPendingDeposits = loadPendingDeposits; // ensure existing minimal fn is available globally
 
