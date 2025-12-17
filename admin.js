@@ -726,5 +726,59 @@ function copyIndexSpec(name) {
 window.openIndexConsole = openIndexConsole;
 window.copyIndexSpec = copyIndexSpec;
 
-// ... dan seterusnya untuk fungsi-fungsi lainnya
+// Placeholder implementations for tabs and actions that are not yet implemented
+// These prevent ReferenceErrors and provide user-friendly messages
+async function loadAdvertiserTasks() {
+  console.log('loadAdvertiserTasks: placeholder called');
+  if (window.appendAuthDebug) window.appendAuthDebug('loadAdvertiserTasks: placeholder');
+  showNotification('Fitur Approve Advertiser Tasks belum tersedia', 'info');
+}
+
+async function loadRecentAdminTasks() {
+  console.log('loadRecentAdminTasks: placeholder called');
+  if (window.appendAuthDebug) window.appendAuthDebug('loadRecentAdminTasks: placeholder');
+  showNotification('Fitur Recent Admin Tasks belum tersedia', 'info');
+}
+
+async function loadPendingUserProofs() {
+  console.log('loadPendingUserProofs: placeholder called');
+  if (window.appendAuthDebug) window.appendAuthDebug('loadPendingUserProofs: placeholder');
+  showNotification('Fitur Pending User Proofs belum tersedia', 'info');
+}
+
+async function loadPendingWithdrawals() {
+  console.log('loadPendingWithdrawals: placeholder called');
+  if (window.appendAuthDebug) window.appendAuthDebug('loadPendingWithdrawals: placeholder');
+  showNotification('Fitur Pending Withdrawals belum tersedia', 'info');
+}
+
+async function loadUsers() {
+  console.log('loadUsers: placeholder called');
+  if (window.appendAuthDebug) window.appendAuthDebug('loadUsers: placeholder');
+  showNotification('Fitur User Management belum tersedia', 'info');
+}
+
+async function loadSystemLogs() {
+  console.log('loadSystemLogs: placeholder called');
+  if (window.appendAuthDebug) window.appendAuthDebug('loadSystemLogs: placeholder');
+  showNotification('Fitur System Logs belum tersedia', 'info');
+}
+
+function showAddMethodModal() {
+  console.log('showAddMethodModal: placeholder called');
+  if (window.appendAuthDebug) window.appendAuthDebug('showAddMethodModal: placeholder');
+  // Show a simple modal or notification as fallback
+  showNotification('Form tambah payment method belum tersedia', 'info');
+}
+
+// Export placeholders to window so onclick handlers work
+window.loadAdvertiserTasks = loadAdvertiserTasks;
+window.loadRecentAdminTasks = loadRecentAdminTasks;
+window.loadPendingUserProofs = loadPendingUserProofs;
+window.loadPendingWithdrawals = loadPendingWithdrawals;
+window.loadUsers = loadUsers;
+window.loadSystemLogs = loadSystemLogs;
+window.showAddMethodModal = showAddMethodModal;
+window.loadPendingDeposits = loadPendingDeposits; // ensure existing minimal fn is available globally
+
 // file content end
