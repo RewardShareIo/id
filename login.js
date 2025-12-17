@@ -1,6 +1,6 @@
 // file name: login.js
 // file content begin
-import { auth, db } from "./firebase.js";
+import { auth, db, authInitPromise } from "./firebase.js";
 import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -93,7 +93,8 @@ window.login = async function() {
 };
 
 // Check if user is already logged in
-auth.onAuthStateChanged((user) => {
+auth.onAuthStateChanged(async (user) => {
+  await authInitPromise;
   console.log('login:onAuthStateChanged', user ? user.uid : null, 'path', window.location.pathname);
   if (user) {
     // User is logged in, redirect based on current page

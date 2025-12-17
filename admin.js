@@ -1,6 +1,6 @@
 // file name: admin.js
 // file content begin
-import { auth, db } from "./firebase.js";
+import { auth, db, authInitPromise } from "./firebase.js";
 import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { 
   collection, query, where, getDocs, getDoc, doc, updateDoc, 
@@ -141,8 +141,10 @@ async function loadDashboardData() {
       doc.data().isActive !== false
     ).length;
     
-    document.getElementById('totalUsers').textContent = totalUsers.toLocaleString('id-ID');
-    document.getElementById('activeUsers').textContent = activeUsers.toLocaleString('id-ID');
+    const totalUsersEl = document.getElementById('totalUsers');
+    if (totalUsersEl) totalUsersEl.textContent = totalUsers.toLocaleString('id-ID');
+    const activeUsersEl = document.getElementById('activeUsers');
+    if (activeUsersEl) activeUsersEl.textContent = activeUsers.toLocaleString('id-ID');
     
     // Calculate total balance
     let totalBalance = 0;
@@ -153,8 +155,10 @@ async function loadDashboardData() {
       lockedBalance += (user.lockedBalance || 0);
     });
     
-    document.getElementById('totalBalance').textContent = formatCurrency(totalBalance);
-    document.getElementById('lockedBalance').textContent = formatCurrency(lockedBalance);
+    const totalBalanceEl = document.getElementById('totalBalance');
+    if (totalBalanceEl) totalBalanceEl.textContent = formatCurrency(totalBalance);
+    const lockedBalanceEl = document.getElementById('lockedBalance');
+    if (lockedBalanceEl) lockedBalanceEl.textContent = formatCurrency(lockedBalance);
     
     // Load tasks count
     const tasksSnapshot = await getDocs(collection(db, "tasks"));
@@ -163,8 +167,10 @@ async function loadDashboardData() {
       doc.data().status === 'active'
     ).length;
     
-    document.getElementById('totalTasksAdmin').textContent = totalTasks.toLocaleString('id-ID');
-    document.getElementById('activeTasks').textContent = activeTasks.toLocaleString('id-ID');
+    const totalTasksAdminEl = document.getElementById('totalTasksAdmin');
+    if (totalTasksAdminEl) totalTasksAdminEl.textContent = totalTasks.toLocaleString('id-ID');
+    const activeTasksEl = document.getElementById('activeTasks');
+    if (activeTasksEl) activeTasksEl.textContent = activeTasks.toLocaleString('id-ID');
     
     // Load pending counts
     await loadPendingCounts();
@@ -242,12 +248,16 @@ async function loadPendingCounts() {
     // Update total pending
     const totalPending = pendingDepositsCount + pendingAdvertiserTasksCount + 
                         pendingUserProofsCount + pendingWithdrawalsCount;
-    document.getElementById('totalPending').textContent = totalPending.toLocaleString('id-ID');
+    const totalPendingEl = document.getElementById('totalPending');
+    if (totalPendingEl) totalPendingEl.textContent = totalPending.toLocaleString('id-ID');
     
     // Update counts in dashboard
-    document.getElementById('pendingDepositsCount').textContent = pendingDepositsCount;
-    document.getElementById('pendingAdvertiserTasksCount').textContent = pendingAdvertiserTasksCount;
-    document.getElementById('pendingUserProofsCount').textContent = pendingUserProofsCount;
+    const pendingDepositsCountEl = document.getElementById('pendingDepositsCount');
+    if (pendingDepositsCountEl) pendingDepositsCountEl.textContent = pendingDepositsCount;
+    const pendingAdvertiserTasksCountEl = document.getElementById('pendingAdvertiserTasksCount');
+    if (pendingAdvertiserTasksCountEl) pendingAdvertiserTasksCountEl.textContent = pendingAdvertiserTasksCount;
+    const pendingUserProofsCountEl = document.getElementById('pendingUserProofsCount');
+    if (pendingUserProofsCountEl) pendingUserProofsCountEl.textContent = pendingUserProofsCount;
     
   } catch (error) {
     console.error("Error loading pending counts:", error);
@@ -425,7 +435,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Monitor auth state
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
+  await authInitPromise;
   if (!user && window.location.pathname.includes('admin.html')) {
     window.location.href = 'login-admin.html';
   }

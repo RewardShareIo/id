@@ -1,6 +1,6 @@
 // file name: deposit.js
 // file content begin
-import { auth, db } from "./firebase.js";
+import { auth, db, authInitPromise } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { doc, getDoc, addDoc, collection, query, where, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -497,7 +497,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Monitor auth state
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
+  await authInitPromise;
   if (!user && window.location.pathname.includes('deposit.html')) {
     window.location.href = 'login.html';
   }

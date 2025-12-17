@@ -1,6 +1,6 @@
 // file name: tasks.js
 // file content begin
-import { auth, db } from "./firebase.js";
+import { auth, db, authInitPromise } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { collection, query, where, getDocs, orderBy, limit, doc, getDoc, addDoc, updateDoc, increment } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -585,7 +585,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Monitor auth state
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
+  await authInitPromise;
   if (!user && window.location.pathname.includes('tasks.html')) {
     window.location.href = 'login.html';
   }

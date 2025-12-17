@@ -1,6 +1,6 @@
 // file name: history.js
 // file content begin
-import { auth, db } from "./firebase.js";
+import { auth, db, authInitPromise } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { collection, query, where, getDocs, orderBy, addDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -414,11 +414,14 @@ async function submitWithdraw(event) {
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
   // Check auth
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
+    await authInitPromise;
     if (user) {
       loadHistory();
     } else {
-      window.location.href = 'login.html';
+      if (window.location.pathname.includes('withdraw.html') || window.location.pathname.includes('history.html')) {
+        window.location.href = 'login.html';
+      }
     }
   });
   

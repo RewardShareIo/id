@@ -1,6 +1,6 @@
 // file name: dashboard.js
 // file content begin
-import { auth, db } from "./firebase.js";
+import { auth, db, authInitPromise } from "./firebase.js";
 import { signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { doc, getDoc, updateDoc, increment, setDoc, collection, query, where, getDocs, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -362,15 +362,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Monitor auth state (with debug logs)
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
+  await authInitPromise;
   console.log('dashboard:onAuthStateChanged', user ? user.uid : null, 'path', window.location.pathname);
   if (!user && window.location.pathname.includes('dashboard.html')) {
-    // delay slightly to allow auth to settle
-    setTimeout(() => {
-      if (!auth.currentUser && window.location.pathname.includes('dashboard.html')) {
-        window.location.href = 'login.html';
-      }
-    }, 500);
+    window.location.href = 'login.html';
   }
 });
 // file content end

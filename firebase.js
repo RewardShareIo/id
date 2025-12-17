@@ -2,7 +2,7 @@
 // file content begin
 // Import Firebase modules
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // Firebase configuration
@@ -19,6 +19,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// Create auth init promise that resolves once Firebase reports initial auth state
+let _authInitResolve;
+export const authInitPromise = new Promise((resolve) => { _authInitResolve = resolve; });
+
+onAuthStateChanged(auth, (user) => {
+  // Resolve the promise only once (first notification)
+  if (_authInitResolve) {
+    _authInitResolve(user);
+    _authInitResolve = null;
+  }
+});
 
 // Set persistence
 setPersistence(auth, browserLocalPersistence)

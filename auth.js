@@ -1,18 +1,14 @@
 // file name: auth.js
 // file content begin
-import { auth } from "./firebase.js";
+import { auth, authInitPromise } from "./firebase.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 // Check if user is authenticated
 export function checkAuth() {
-  return new Promise((resolve, reject) => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        resolve(user);
-      } else {
-        reject(new Error("User not authenticated"));
-      }
-    });
+  // Wait for initial auth state and resolve/reject accordingly
+  return authInitPromise.then(user => {
+    if (user) return user;
+    throw new Error("User not authenticated");
   });
 }
 
@@ -45,7 +41,8 @@ export async function isAdmin() {
 
 // Redirect if not authenticated
 export function requireAuth(redirectTo = 'login.html') {
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
+    await authInitPromise;
     if (!user && !window.location.pathname.includes('login') && 
         !window.location.pathname.includes('register') &&
         !window.location.pathname.includes('index')) {
@@ -56,7 +53,8 @@ export function requireAuth(redirectTo = 'login.html') {
 
 // Redirect if already authenticated
 export function redirectIfAuthenticated(redirectTo = 'dashboard.html') {
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
+    await authInitPromise;
     if (user && (window.location.pathname.includes('login') || 
                  window.location.pathname.includes('register'))) {
       window.location.href = redirectTo;
