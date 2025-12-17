@@ -1,6 +1,6 @@
 // file name: login-admin.js
 // file content begin
-import { auth, db } from "./firebase.js";
+import { auth, db, authInitPromise } from "./firebase.js";
 import { signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
@@ -29,6 +29,7 @@ async function adminLogin() {
       // Verifikasi bahwa user adalah admin
       if (userData.role === 'admin' || userData.isAdmin === true) {
         // Redirect ke admin panel
+        try { sessionStorage.setItem('justAdminRedirect', Date.now().toString()); } catch (e) {}
         window.location.href = 'admin.html';
       } else {
         await auth.signOut();
@@ -57,13 +58,26 @@ window.adminLogin = adminLogin;
 
 // Cek jika admin sudah login
 auth.onAuthStateChanged(async (user) => {
+  // Wait for Firebase auth to initialize to avoid acting on intermediate states
+  await authInitPromise;
+
+  // If we were recently signed out by admin check, do not automatically redirect to admin immediately
+  const lastAdminSignout = parseInt(sessionStorage.getItem('lastAdminSignout') || '0', 10);
+  const now = Date.now();
+  const skipRedirectWindow = 3000; // ms
+
   if (user && window.location.pathname.includes('login-admin.html')) {
     try {
       const userDoc = await getDoc(doc(db, "users", user.uid));
       if (userDoc.exists()) {
         const userData = userDoc.data();
         if (userData.role === 'admin' || userData.isAdmin === true) {
-          window.location.href = 'admin.html';
+          // Only redirect if we weren't just signed out by the admin check (avoid loops)
+          if (now - lastAdminSignout > skipRedirectWindow) {
+            window.location.href = 'admin.html';
+          } else {
+            console.warn('Skipping immediate admin redirect due to recent signout');
+          }
         }
       }
     } catch (error) {

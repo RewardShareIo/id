@@ -39,9 +39,19 @@ async function checkAdminAuth() {
       });
 
       if (!currentAdmin) {
-        // Final check failed, redirect to login-admin
-        window.location.href = 'login-admin.html';
-        return;
+        // If the user just came from an admin redirect, give a bit more time before redirecting
+        const lastJustRedirect = parseInt(sessionStorage.getItem('justAdminRedirect') || '0', 10);
+        if (Date.now() - lastJustRedirect < 3000) {
+          console.warn('admin: recent justAdminRedirect found, waiting briefly before final redirect');
+          await new Promise(r => setTimeout(r, 1200));
+          currentAdmin = auth.currentUser;
+        }
+
+        if (!currentAdmin) {
+          // Final check failed, redirect to login-admin
+          window.location.href = 'login-admin.html';
+          return;
+        }
       }
     }
 
