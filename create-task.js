@@ -12,8 +12,18 @@ async function loadUserData() {
   try {
     currentUser = auth.currentUser;
     if (!currentUser) {
-      window.location.href = 'login.html';
-      return;
+      await new Promise((resolve) => {
+        const unsub = onAuthStateChanged(auth, (u) => {
+          currentUser = u;
+          unsub();
+          resolve();
+        });
+        setTimeout(resolve, 1000);
+      });
+      if (!currentUser) {
+        window.location.href = 'login.html';
+        return;
+      }
     }
 
     const userDoc = await getDoc(doc(db, "users", currentUser.uid));
@@ -41,6 +51,9 @@ function setupFormListeners() {
   const rewardInput = document.getElementById('reward');
   const slotsInput = document.getElementById('slots');
   
+  // If expected elements are not present, do nothing
+  if (!form || !rewardInput || !slotsInput) return;
+  
   // Update cost summary on input change
   [rewardInput, slotsInput].forEach(input => {
     input.addEventListener('input', updateCostSummary);
@@ -55,38 +68,62 @@ function setupFormListeners() {
 
 // Update cost summary
 function updateCostSummary() {
-  const reward = parseInt(document.getElementById('reward').value) || 0;
-  const slots = parseInt(document.getElementById('slots').value) || 0;
+  const rewardEl = document.getElementById('reward');
+  const slotsEl = document.getElementById('slots');
+  if (!rewardEl || !slotsEl) return;
+
+  const reward = parseInt(rewardEl.value) || 0;
+  const slots = parseInt(slotsEl.value) || 0;
   
   // Calculate costs
   const totalReward = reward * slots;
   const platformFee = Math.floor(totalReward * 0.2); // 20% fee
   const totalCost = totalReward + platformFee;
   
-  // Update display
-  document.getElementById('rewardDisplay').textContent = `Rp${reward.toLocaleString('id-ID')}`;
-  document.getElementById('slotsDisplay').textContent = slots;
-  document.getElementById('feeDisplay').textContent = `Rp${platformFee.toLocaleString('id-ID')}`;
-  document.getElementById('totalCost').textContent = `Rp${totalCost.toLocaleString('id-ID')}`;
+  // Update display (guard elements)
+  const rewardDisplay = document.getElementById('rewardDisplay');
+  const slotsDisplay = document.getElementById('slotsDisplay');
+  const feeDisplay = document.getElementById('feeDisplay');
+  const totalCostEl = document.getElementById('totalCost');
+  const msgEl = document.getElementById('createTaskMsg');
+
+  if (rewardDisplay) rewardDisplay.textContent = `Rp${reward.toLocaleString('id-ID')}`;
+  if (slotsDisplay) slotsDisplay.textContent = slots;
+  if (feeDisplay) feeDisplay.textContent = `Rp${platformFee.toLocaleString('id-ID')}`;
+  if (totalCostEl) totalCostEl.textContent = `Rp${totalCost.toLocaleString('id-ID')}`;
   
   // Check if user has enough locked balance
   if (userData && userData.lockedBalance < totalCost) {
-    document.getElementById('createTaskMsg').textContent = `Saldo terkunci tidak mencukupi. Dibutuhkan: Rp${totalCost.toLocaleString('id-ID')}`;
-    document.getElementById('createTaskMsg').className = "text-danger";
+    if (msgEl) {
+      msgEl.textContent = `Saldo terkunci tidak mencukupi. Dibutuhkan: Rp${totalCost.toLocaleString('id-ID')}`;
+      msgEl.className = "text-danger";
+    }
   } else {
-    document.getElementById('createTaskMsg').textContent = '';
+    if (msgEl) msgEl.textContent = '';
   }
 }
 
 // Create task
 async function createTask() {
   try {
-    const taskType = document.getElementById('taskType').value;
-    const taskTitle = document.getElementById('taskTitle').value.trim();
-    const taskDescription = document.getElementById('taskDescription').value.trim();
-    const taskLink = document.getElementById('taskLink').value.trim();
-    const reward = parseInt(document.getElementById('reward').value);
-    const slots = parseInt(document.getElementById('slots').value);
+    const taskTypeEl = document.getElementById('taskType');
+    const taskTitleEl = document.getElementById('taskTitle');
+    const taskDescriptionEl = document.getElementById('taskDescription');
+    const taskLinkEl = document.getElementById('taskLink');
+    const rewardEl = document.getElementById('reward');
+    const slotsEl = document.getElementById('slots');
+
+    if (!taskTypeEl || !taskTitleEl || !taskDescriptionEl || !rewardEl || !slotsEl) {
+      showNotification("Form tidak ditemukan atau tidak lengkap", "error");
+      return;
+    }
+
+    const taskType = taskTypeEl.value;
+    const taskTitle = taskTitleEl.value.trim();
+    const taskDescription = taskDescriptionEl.value.trim();
+    const taskLink = taskLinkEl ? taskLinkEl.value.trim() : '';
+    const reward = parseInt(rewardEl.value);
+    const slots = parseInt(slotsEl.value);
     
     // Validation
     if (!taskType || !taskTitle || !taskDescription || !reward || !slots) {
@@ -195,7 +232,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // Initial cost calculation
-  updateCostSummary();
+  // Initial cost calculation (only if fields exist)
+  if (document.getElementById('reward') && document.getElementById('slots')) {
+    updateCostSummary();
+  }
 });
 // file content end

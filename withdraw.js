@@ -2,7 +2,7 @@
 // file content begin
 import { auth, db } from "./firebase.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { collection, query, where, getDocs, orderBy, addDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 let currentUser = null;
 let currentTab = 'all';
@@ -12,8 +12,18 @@ async function loadHistory() {
   try {
     currentUser = auth.currentUser;
     if (!currentUser) {
-      window.location.href = 'login.html';
-      return;
+      await new Promise((resolve) => {
+        const unsub = onAuthStateChanged(auth, (u) => {
+          currentUser = u;
+          unsub();
+          resolve();
+        });
+        setTimeout(resolve, 1000);
+      });
+      if (!currentUser) {
+        window.location.href = 'login.html';
+        return;
+      }
     }
 
     // Load all history types
@@ -153,10 +163,9 @@ function showTab(tab) {
   currentTab = tab;
   
   // Update active tab UI
-  document.querySelectorAll('.tab').forEach(t => {
-    t.classList.remove('active');
-  });
-  document.querySelector(`.tab[onclick*="${tab}"]`).classList.add('active');
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  const activeTabEl = document.querySelector(`.tab[onclick*="${tab}"]`);
+  if (activeTabEl) activeTabEl.classList.add('active');
   
   // Display data
   displayHistory();
@@ -165,6 +174,7 @@ function showTab(tab) {
 // Display history based on current tab
 function displayHistory() {
   const container = document.getElementById('historyContent');
+  if (!container) return;
   
   // Combine all history
   let allHistory = [];
@@ -311,6 +321,96 @@ async function logout() {
   }
 }
 
+// Submit withdraw request
+async function submitWithdraw(event) {
+  try {
+    if (event && event.preventDefault) event.preventDefault();
+
+    const nameEl = document.getElementById('name');
+    const methodEl = document.getElementById('method');
+    const accountEl = document.getElementById('accountNumber');
+    const amountEl = document.getElementById('amount');
+    const withdrawMsg = document.getElementById('withdrawMsg');
+
+    if (!nameEl || !methodEl || !accountEl || !amountEl || !withdrawMsg) {
+      console.error('Form withdraw tidak lengkap');
+      return;
+    }
+
+    const name = nameEl.value.trim();
+    const method = methodEl.value;
+    const accountNumber = accountEl.value.trim();
+    const amount = parseInt(amountEl.value, 10) || 0;
+
+    // Validation
+    if (!name || !method || !accountNumber || !amount) {
+      withdrawMsg.textContent = 'Semua field harus diisi';
+      return;
+    }
+
+    if (amount < 30000) {
+      withdrawMsg.textContent = 'Minimal withdraw Rp30.000';
+      return;
+    }
+
+    // Check balance (client-side)
+    if (!currentUser) {
+      withdrawMsg.textContent = 'User tidak ditemukan. Silakan login ulang.';
+      return;
+    }
+
+    const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
+    const userBal = userDoc.exists() ? (userDoc.data().mainBalance || 0) : 0;
+
+    if (userBal < amount) {
+      withdrawMsg.textContent = 'Saldo tidak mencukupi';
+      return;
+    }
+
+    // Disable button
+    const submitBtn = document.querySelector('#withdrawForm button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = '⏳ Mengirim...';
+    }
+
+    // Create withdrawal entry
+    await addDoc(collection(db, 'withdrawals'), {
+      userId: currentUser.uid,
+      userEmail: currentUser.email,
+      userName: userDoc.exists() ? userDoc.data().username : currentUser.email,
+      method: method,
+      accountNumber: accountNumber,
+      amount: amount,
+      fee: 2000,
+      netAmount: amount - 2000,
+      status: 'pending',
+      createdAt: new Date()
+    });
+
+    showNotification('Permintaan withdraw terkirim, menunggu verifikasi admin', 'success');
+    withdrawMsg.textContent = '';
+
+    // Reset form
+    const wf = document.getElementById('withdrawForm');
+    if (wf) wf.reset();
+
+    // Refresh history
+    loadWithdrawHistory();
+
+  } catch (error) {
+    console.error('Error submitting withdraw:', error);
+    const withdrawMsg = document.getElementById('withdrawMsg');
+    if (withdrawMsg) withdrawMsg.textContent = 'Error mengirim withdraw: ' + error.message;
+
+    const submitBtn = document.querySelector('#withdrawForm button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Ajukan Penarikan';
+    }
+  }
+}
+
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
   // Check auth
@@ -322,6 +422,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
+  // Setup withdraw form
+  const withdrawForm = document.getElementById('withdrawForm');
+  if (withdrawForm) {
+    withdrawForm.addEventListener('submit', submitWithdraw);
+  }
+
   // Setup logout button
   const logoutBtn = document.getElementById('logoutBtn');
   if (logoutBtn) {

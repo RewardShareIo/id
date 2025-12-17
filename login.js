@@ -6,13 +6,23 @@ import { doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-
 
 // Login function
 window.login = async function() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value;
+  const emailEl = document.getElementById('loginEmail');
+  const passwordEl = document.getElementById('loginPassword');
   const loginMsg = document.getElementById('loginMsg');
+  if (!emailEl || !passwordEl) {
+    console.error('Login form elements not found');
+    if (loginMsg) loginMsg.textContent = 'Form login tidak ditemukan';
+    return;
+  }
+
+  const email = emailEl.value.trim();
+  const password = passwordEl.value;
 
   // Reset message
-  loginMsg.textContent = '';
-  loginMsg.className = 'text-danger';
+  if (loginMsg) {
+    loginMsg.textContent = '';
+    loginMsg.className = 'text-danger';
+  }
 
   // Validation
   if (!email || !password) {
@@ -23,13 +33,16 @@ window.login = async function() {
   try {
     // Show loading
     const loginBtn = document.querySelector('.btn-primary');
-    const originalText = loginBtn.textContent;
-    loginBtn.textContent = "Loading...";
-    loginBtn.disabled = true;
+    const originalText = loginBtn ? loginBtn.textContent : null;
+    if (loginBtn) {
+      loginBtn.textContent = "Loading...";
+      loginBtn.disabled = true;
+    }
 
     // Sign in with Firebase Auth
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
+    console.log('login: signInWithEmailAndPassword success', user && user.uid);
 
     // Get user data from Firestore
     const userDoc = await getDoc(doc(db, "users", user.uid));
@@ -48,15 +61,17 @@ window.login = async function() {
     } else {
       // User document not found
       await auth.signOut();
-      loginMsg.textContent = "Data user tidak ditemukan";
+      if (loginMsg) loginMsg.textContent = "Data user tidak ditemukan";
     }
   } catch (error) {
     console.error("Login error:", error);
     
     // Reset button
     const loginBtn = document.querySelector('.btn-primary');
-    loginBtn.textContent = "Login";
-    loginBtn.disabled = false;
+    if (loginBtn) {
+      loginBtn.textContent = "Login";
+      loginBtn.disabled = false;
+    }
     
     // Show error message
     switch(error.code) {
@@ -72,13 +87,14 @@ window.login = async function() {
         loginMsg.textContent = "Akun dinonaktifkan";
         break;
       default:
-        loginMsg.textContent = "Terjadi kesalahan: " + error.message;
+        if (loginMsg) loginMsg.textContent = "Terjadi kesalahan: " + error.message;
     }
   }
 };
 
 // Check if user is already logged in
 auth.onAuthStateChanged((user) => {
+  console.log('login:onAuthStateChanged', user ? user.uid : null, 'path', window.location.pathname);
   if (user) {
     // User is logged in, redirect based on current page
     const currentPage = window.location.pathname.split('/').pop();
@@ -98,6 +114,8 @@ auth.onAuthStateChanged((user) => {
         })
         .catch((error) => {
           console.error("Error checking user data:", error);
+          const loginMsg = document.getElementById('loginMsg');
+          if (loginMsg) loginMsg.textContent = "Terjadi kesalahan saat memeriksa data user";
         });
     }
   }
@@ -105,12 +123,17 @@ auth.onAuthStateChanged((user) => {
 
 // Add Enter key support
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('loginEmail').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') login();
-  });
-  
-  document.getElementById('loginPassword').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') login();
-  });
+  const emailEl = document.getElementById('loginEmail');
+  const pwdEl = document.getElementById('loginPassword');
+  if (emailEl) {
+    emailEl.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') login();
+    });
+  }
+  if (pwdEl) {
+    pwdEl.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') login();
+    });
+  }
 });
 // file content end

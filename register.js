@@ -16,12 +16,23 @@ function generateReferralCode() {
 
 // Register function
 window.register = async function() {
-  const email = document.getElementById('regEmail').value.trim();
-  const username = document.getElementById('regUsername').value.trim();
-  const password = document.getElementById('regPassword').value;
-  const confirmPassword = document.getElementById('regConfirm').value;
-  const referralCode = document.getElementById('regReferral').value.trim().toUpperCase();
+  const emailEl = document.getElementById('regEmail');
+  const usernameEl = document.getElementById('regUsername');
+  const passwordEl = document.getElementById('regPassword');
+  const confirmEl = document.getElementById('regConfirm');
+  const referralEl = document.getElementById('regReferral');
   const regMsg = document.getElementById('regMsg');
+
+  if (!emailEl || !usernameEl || !passwordEl || !confirmEl) {
+    if (regMsg) regMsg.textContent = 'Form registrasi tidak ditemukan';
+    return;
+  }
+
+  const email = emailEl.value.trim();
+  const username = usernameEl.value.trim();
+  const password = passwordEl.value;
+  const confirmPassword = confirmEl.value;
+  const referralCode = referralEl ? referralEl.value.trim().toUpperCase() : '';
 
   // Reset message
   regMsg.textContent = '';
@@ -51,9 +62,11 @@ window.register = async function() {
   try {
     // Show loading
     const registerBtn = document.querySelector('.btn-primary');
-    const originalText = registerBtn.textContent;
-    registerBtn.textContent = "Mendaftar...";
-    registerBtn.disabled = true;
+    const originalText = registerBtn ? registerBtn.textContent : null;
+    if (registerBtn) {
+      registerBtn.textContent = "Mendaftar...";
+      registerBtn.disabled = true;
+    }
 
     // Check if email already exists
     const emailQuery = query(collection(db, "users"), where("email", "==", email));
@@ -75,6 +88,23 @@ window.register = async function() {
       registerBtn.textContent = originalText;
       registerBtn.disabled = false;
       return;
+    }
+
+    // Device restriction: one device one account
+    try {
+      const deviceQuery = query(collection(db, 'users'), where('deviceInfo.userAgent', '==', navigator.userAgent));
+      const deviceSnap = await getDocs(deviceQuery);
+      if (!deviceSnap.empty) {
+        regMsg.textContent = 'Satu device hanya boleh satu akun';
+        if (registerBtn) {
+          registerBtn.textContent = originalText;
+          registerBtn.disabled = false;
+        }
+        return;
+      }
+    } catch (deviceErr) {
+      // ignore device check errors
+      console.warn('Device check failed', deviceErr);
     }
 
     // Create user in Firebase Auth
@@ -169,8 +199,10 @@ window.register = async function() {
     
     // Reset button
     const registerBtn = document.querySelector('.btn-primary');
-    registerBtn.textContent = "Daftar";
-    registerBtn.disabled = false;
+    if (registerBtn) {
+      registerBtn.textContent = "Daftar";
+      registerBtn.disabled = false;
+    }
     
     // Show error message
     switch(error.code) {

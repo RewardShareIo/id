@@ -13,8 +13,20 @@ async function loadUserData() {
   try {
     currentUser = auth.currentUser;
     if (!currentUser) {
-      window.location.href = 'login.html';
-      return;
+      // Wait briefly for Firebase auth to initialize (avoid redirect loop on page navigation)
+      await new Promise((resolve) => {
+        const unsub = onAuthStateChanged(auth, (u) => {
+          currentUser = u;
+          unsub();
+          resolve();
+        });
+        // fallback timeout
+        setTimeout(resolve, 1000);
+      });
+      if (!currentUser) {
+        window.location.href = 'login.html';
+        return;
+      }
     }
 
     const userDoc = await getDoc(doc(db, "users", currentUser.uid));
@@ -349,10 +361,16 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 
-// Monitor auth state
+// Monitor auth state (with debug logs)
 onAuthStateChanged(auth, (user) => {
+  console.log('dashboard:onAuthStateChanged', user ? user.uid : null, 'path', window.location.pathname);
   if (!user && window.location.pathname.includes('dashboard.html')) {
-    window.location.href = 'login.html';
+    // delay slightly to allow auth to settle
+    setTimeout(() => {
+      if (!auth.currentUser && window.location.pathname.includes('dashboard.html')) {
+        window.location.href = 'login.html';
+      }
+    }, 500);
   }
 });
 // file content end

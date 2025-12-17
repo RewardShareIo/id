@@ -74,25 +74,25 @@ function updateCurrentTime() {
     minute: '2-digit',
     second: '2-digit'
   };
-  document.getElementById('currentTime').textContent = 
-    now.toLocaleDateString('id-ID', options);
+  const currentTimeEl = document.getElementById('currentTime');
+  if (currentTimeEl) {
+    currentTimeEl.textContent = now.toLocaleDateString('id-ID', options);
+  }
 }
 
 // Show specific tab
 async function showTab(tabId) {
   // Update active tab UI
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.classList.remove('active');
-  });
-  document.querySelector(`.nav-btn[onclick*="${tabId}"]`).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+  const activeNavBtn = document.querySelector(`.nav-btn[onclick*="${tabId}"]`);
+  if (activeNavBtn) activeNavBtn.classList.add('active');
   
   // Hide all tab content
-  document.querySelectorAll('.tab-content').forEach(tab => {
-    tab.classList.remove('active');
-  });
+  document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
   
-  // Show selected tab
-  document.getElementById(tabId).classList.add('active');
+  // Show selected tab (guard)
+  const tabEl = document.getElementById(tabId);
+  if (tabEl) tabEl.classList.add('active');
   
   // Load tab data
   await loadTab(tabId);
@@ -437,6 +437,13 @@ window.showModal = showModal;
 window.closeModal = closeModal;
 window.logout = logout;
 
+// Expose admin actions to window for UI
+window.approveDeposit = approveDeposit;
+window.rejectDeposit = rejectDeposit;
+window.approveWithdraw = approveWithdraw;
+window.approveTaskProof = approveTaskProof;
+window.rejectTaskProof = rejectTaskProof;
+
 // Note: Fungsi-fungsi spesifik untuk setiap tab (loadPaymentMethods, loadPendingDeposits, dll)
 // akan diimplementasikan sesuai kebutuhan masing-masing tab.
 // Untuk menjaga agar file tidak terlalu panjang, implementasi lengkap setiap fungsi
@@ -451,6 +458,151 @@ async function loadPaymentMethods() {
 async function loadPendingDeposits() {
   // Implementasi loading pending deposits
   console.log("Loading pending deposits...");
+}
+
+// Approve a deposit (admin)
+async function approveDeposit(depositId) {
+  try {
+    if (!confirm('Approve deposit ini?')) return;
+    const depositRef = doc(db, 'deposits', depositId);
+    const depSnap = await getDoc(depositRef);
+    if (!depSnap.exists()) throw new Error('Deposit tidak ditemukan');
+    const deposit = depSnap.data();
+
+    // Update deposit status
+    await updateDoc(depositRef, {
+      status: 'approved',
+      approvedAt: new Date(),
+      approvedBy: currentAdmin.uid,
+      lockedUntil: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+    });
+
+    // Add to user's locked balance
+    const userRef = doc(db, 'users', deposit.userId);
+    await updateDoc(userRef, {
+      lockedBalance: increment(deposit.amount),
+      totalDeposit: increment(deposit.amount)
+    });
+
+    showNotification('Deposit disetujui dan saldo dikunci selama 3 hari', 'success');
+    await loadPendingDeposits();
+  } catch (error) {
+    console.error('Error approving deposit:', error);
+    showNotification('Gagal approve deposit: ' + error.message, 'error');
+  }
+}
+
+// Reject a deposit
+async function rejectDeposit(depositId, reason = '') {
+  try {
+    if (!confirm('Reject deposit ini?')) return;
+    const depositRef = doc(db, 'deposits', depositId);
+    await updateDoc(depositRef, {
+      status: 'rejected',
+      rejectedAt: new Date(),
+      rejectedBy: currentAdmin.uid,
+      rejectedReason: reason
+    });
+    showNotification('Deposit ditolak', 'success');
+    await loadPendingDeposits();
+  } catch (error) {
+    console.error('Error rejecting deposit:', error);
+    showNotification('Gagal reject deposit: ' + error.message, 'error');
+  }
+}
+
+// Approve a withdrawal
+async function approveWithdraw(withdrawId) {
+  try {
+    if (!confirm('Approve withdrawal ini?')) return;
+    const wRef = doc(db, 'withdrawals', withdrawId);
+    const wSnap = await getDoc(wRef);
+    if (!wSnap.exists()) throw new Error('Withdraw tidak ditemukan');
+    const withdraw = wSnap.data();
+
+    const userRef = doc(db, 'users', withdraw.userId);
+    const userSnap = await getDoc(userRef);
+    const user = userSnap.exists() ? userSnap.data() : null;
+
+    if (!user || (user.mainBalance || 0) < withdraw.amount) {
+      throw new Error('Saldo user tidak mencukupi');
+    }
+
+    // Deduct user balance and mark withdraw approved
+    await updateDoc(userRef, {
+      mainBalance: increment(-withdraw.amount),
+      totalWithdrawn: increment(withdraw.amount)
+    });
+
+    await updateDoc(wRef, {
+      status: 'approved',
+      approvedAt: new Date(),
+      approvedBy: currentAdmin.uid
+    });
+
+    showNotification('Withdraw disetujui', 'success');
+    await loadPendingWithdrawals();
+  } catch (error) {
+    console.error('Error approving withdraw:', error);
+    showNotification('Gagal approve withdraw: ' + error.message, 'error');
+  }
+}
+
+// Approve task proof (reward worker)
+async function approveTaskProof(proofId) {
+  try {
+    if (!confirm('Approve bukti task ini?')) return;
+    const proofRef = doc(db, 'taskProofs', proofId);
+    const pSnap = await getDoc(proofRef);
+    if (!pSnap.exists()) throw new Error('Proof tidak ditemukan');
+    const proof = pSnap.data();
+
+    // Get task to know reward
+    const taskRef = doc(db, 'tasks', proof.taskId);
+    const tSnap = await getDoc(taskRef);
+    const task = tSnap.exists() ? tSnap.data() : null;
+    const reward = task ? (task.reward || 0) : 0;
+
+    // Update proof
+    await updateDoc(proofRef, {
+      status: 'approved',
+      reward: reward,
+      reviewedAt: new Date(),
+      reviewedBy: currentAdmin.uid
+    });
+
+    // Credit user
+    const userRef = doc(db, 'users', proof.userId);
+    await updateDoc(userRef, {
+      mainBalance: increment(reward),
+      totalEarned: increment(reward)
+    });
+
+    showNotification('Bukti task disetujui dan reward diberikan', 'success');
+    await loadPendingUserProofs();
+  } catch (error) {
+    console.error('Error approving proof:', error);
+    showNotification('Gagal approve proof: ' + error.message, 'error');
+  }
+}
+
+// Reject task proof
+async function rejectTaskProof(proofId, reason = '') {
+  try {
+    if (!confirm('Reject bukti task ini?')) return;
+    const proofRef = doc(db, 'taskProofs', proofId);
+    await updateDoc(proofRef, {
+      status: 'rejected',
+      reviewedAt: new Date(),
+      reviewedBy: currentAdmin.uid,
+      rejectReason: reason
+    });
+    showNotification('Bukti task ditolak', 'success');
+    await loadPendingUserProofs();
+  } catch (error) {
+    console.error('Error rejecting proof:', error);
+    showNotification('Gagal reject proof: ' + error.message, 'error');
+  }
 }
 
 // ... dan seterusnya untuk fungsi-fungsi lainnya

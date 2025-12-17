@@ -67,8 +67,18 @@ async function loadUserData() {
   try {
     currentUser = auth.currentUser;
     if (!currentUser) {
-      window.location.href = 'login.html';
-      return;
+      await new Promise((resolve) => {
+        const unsub = onAuthStateChanged(auth, (u) => {
+          currentUser = u;
+          unsub();
+          resolve();
+        });
+        setTimeout(resolve, 1000);
+      });
+      if (!currentUser) {
+        window.location.href = 'login.html';
+        return;
+      }
     }
 
     const userDoc = await getDoc(doc(db, "users", currentUser.uid));
@@ -99,14 +109,15 @@ function selectMethod(method) {
   selectedMethod = method;
   
   // Update UI
-  document.querySelectorAll('.method-card').forEach(card => {
-    card.classList.remove('selected');
-  });
-  document.querySelector(`.method-card[data-method="${method}"]`).classList.add('selected');
+  document.querySelectorAll('.method-card').forEach(card => card.classList.remove('selected'));
+  const methodCard = document.querySelector(`.method-card[data-method="${method}"]`);
+  if (methodCard) methodCard.classList.add('selected');
   
-  // Show method info
-  document.getElementById('selectedMethodInfo').style.display = 'block';
-  document.getElementById('methodName').textContent = method;
+  // Show method info (guard)
+  const selectedMethodInfo = document.getElementById('selectedMethodInfo');
+  const methodNameEl = document.getElementById('methodName');
+  if (selectedMethodInfo) selectedMethodInfo.style.display = 'block';
+  if (methodNameEl) methodNameEl.textContent = method;
   
   // Show account info
   showAccountInfo();
@@ -117,13 +128,13 @@ function selectAmount(amount) {
   selectedAmount = amount;
   
   // Update UI
-  document.querySelectorAll('.amount-option').forEach(option => {
-    option.classList.remove('selected');
-  });
-  document.querySelector(`.amount-option[data-amount="${amount}"]`).classList.add('selected');
+  document.querySelectorAll('.amount-option').forEach(option => option.classList.remove('selected'));
+  const selectedOption = document.querySelector(`.amount-option[data-amount="${amount}"]`);
+  if (selectedOption) selectedOption.classList.add('selected');
   
-  // Hide custom amount container
-  document.getElementById('customAmountContainer').style.display = 'none';
+  // Hide custom amount container (guard)
+  const customAmountContainer = document.getElementById('customAmountContainer');
+  if (customAmountContainer) customAmountContainer.style.display = 'none';
   
   // Update display
   updateAmountDisplay();
@@ -131,15 +142,16 @@ function selectAmount(amount) {
 
 // Show custom amount input
 function showCustomAmount() {
-  document.getElementById('customAmountContainer').style.display = 'block';
-  document.querySelectorAll('.amount-option').forEach(option => {
-    option.classList.remove('selected');
-  });
+  const customAmountContainer = document.getElementById('customAmountContainer');
+  if (customAmountContainer) customAmountContainer.style.display = 'block';
+  document.querySelectorAll('.amount-option').forEach(option => option.classList.remove('selected'));
 }
 
 // Use custom amount
 function useCustomAmount() {
-  const customAmount = parseInt(document.getElementById('customAmount').value);
+  const customAmountEl = document.getElementById('customAmount');
+  if (!customAmountEl) return;
+  const customAmount = parseInt(customAmountEl.value);
   if (customAmount >= 30000) {
     selectedAmount = customAmount;
     updateAmountDisplay();
@@ -150,7 +162,8 @@ function useCustomAmount() {
 
 // Update amount display
 function updateAmountDisplay() {
-  document.getElementById('displayAmount').textContent = `Rp${selectedAmount.toLocaleString('id-ID')}`;
+  const displayAmountEl = document.getElementById('displayAmount');
+  if (displayAmountEl) displayAmountEl.textContent = `Rp${selectedAmount.toLocaleString('id-ID')}`;
   
   // Show account info if method selected
   if (selectedMethod) {
@@ -166,6 +179,7 @@ function showAccountInfo() {
   if (!method) return;
   
   const accountDetails = document.getElementById('accountDetails');
+  if (!accountDetails) return;
   accountDetails.innerHTML = `
     <div class="account-detail">
       <div><strong>Nama:</strong> ${method.holder}</div>
@@ -175,9 +189,11 @@ function showAccountInfo() {
     ${method.instructions ? `<p><strong>Instruksi:</strong> ${method.instructions}</p>` : ''}
   `;
   
-  // Show account info and upload container
-  document.getElementById('accountInfoContainer').style.display = 'block';
-  document.getElementById('uploadContainer').style.display = 'block';
+  // Show account info and upload container (guard)
+  const accountInfoContainer = document.getElementById('accountInfoContainer');
+  const uploadContainer = document.getElementById('uploadContainer');
+  if (accountInfoContainer) accountInfoContainer.style.display = 'block';
+  if (uploadContainer) uploadContainer.style.display = 'block';
 }
 
 // Handle file select
@@ -202,17 +218,23 @@ function handleFileSelect(event) {
   // Preview image
   const reader = new FileReader();
   reader.onload = (e) => {
-    document.getElementById('previewImage').src = e.target.result;
+    const previewImage = document.getElementById('previewImage');
+    if (previewImage) previewImage.src = e.target.result;
   };
   reader.readAsDataURL(file);
   
-  // Update UI
-  document.getElementById('filePreview').style.display = 'flex';
-  document.getElementById('fileName').textContent = file.name;
-  document.getElementById('fileSize').textContent = formatFileSize(file.size);
+  // Update UI (guard)
+  const filePreviewEl = document.getElementById('filePreview');
+  const fileNameEl = document.getElementById('fileName');
+  const fileSizeEl = document.getElementById('fileSize');
+  const submitBtn = document.getElementById('submitBtn');
+
+  if (filePreviewEl) filePreviewEl.style.display = 'flex';
+  if (fileNameEl) fileNameEl.textContent = file.name;
+  if (fileSizeEl) fileSizeEl.textContent = formatFileSize(file.size);
   
   // Enable submit button
-  document.getElementById('submitBtn').disabled = false;
+  if (submitBtn) submitBtn.disabled = false;
 }
 
 // Format file size
@@ -227,9 +249,12 @@ function formatFileSize(bytes) {
 // Remove file
 function removeFile() {
   selectedFile = null;
-  document.getElementById('filePreview').style.display = 'none';
-  document.getElementById('proofFile').value = '';
-  document.getElementById('submitBtn').disabled = true;
+  const filePreview = document.getElementById('filePreview');
+  const proofFile = document.getElementById('proofFile');
+  const submitBtn = document.getElementById('submitBtn');
+  if (filePreview) filePreview.style.display = 'none';
+  if (proofFile) proofFile.value = '';
+  if (submitBtn) submitBtn.disabled = true;
 }
 
 // Submit deposit
@@ -308,22 +333,28 @@ function resetForm() {
   selectedFile = null;
   
   // Reset UI
-  document.querySelectorAll('.method-card').forEach(card => {
-    card.classList.remove('selected');
-  });
-  document.querySelectorAll('.amount-option').forEach(option => {
-    option.classList.remove('selected');
-  });
+  document.querySelectorAll('.method-card').forEach(card => card.classList.remove('selected'));
+  document.querySelectorAll('.amount-option').forEach(option => option.classList.remove('selected'));
   
-  document.getElementById('selectedMethodInfo').style.display = 'none';
-  document.getElementById('customAmountContainer').style.display = 'none';
-  document.getElementById('accountInfoContainer').style.display = 'none';
-  document.getElementById('uploadContainer').style.display = 'none';
-  document.getElementById('filePreview').style.display = 'none';
-  document.getElementById('proofFile').value = '';
-  document.getElementById('submitBtn').disabled = true;
-  document.getElementById('displayAmount').textContent = 'Rp0';
-  document.getElementById('customAmount').value = '';
+  const selectedMethodInfo = document.getElementById('selectedMethodInfo');
+  const customAmountContainer = document.getElementById('customAmountContainer');
+  const accountInfoContainer = document.getElementById('accountInfoContainer');
+  const uploadContainer = document.getElementById('uploadContainer');
+  const filePreview = document.getElementById('filePreview');
+  const proofFile = document.getElementById('proofFile');
+  const submitBtn = document.getElementById('submitBtn');
+  const displayAmount = document.getElementById('displayAmount');
+  const customAmount = document.getElementById('customAmount');
+
+  if (selectedMethodInfo) selectedMethodInfo.style.display = 'none';
+  if (customAmountContainer) customAmountContainer.style.display = 'none';
+  if (accountInfoContainer) accountInfoContainer.style.display = 'none';
+  if (uploadContainer) uploadContainer.style.display = 'none';
+  if (filePreview) filePreview.style.display = 'none';
+  if (proofFile) proofFile.value = '';
+  if (submitBtn) submitBtn.disabled = true;
+  if (displayAmount) displayAmount.textContent = 'Rp0';
+  if (customAmount) customAmount.value = '';
 }
 
 // Load deposit history

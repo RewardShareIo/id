@@ -14,8 +14,18 @@ async function loadUserData() {
   try {
     currentUser = auth.currentUser;
     if (!currentUser) {
-      window.location.href = 'login.html';
-      return;
+      await new Promise((resolve) => {
+        const unsub = onAuthStateChanged(auth, (u) => {
+          currentUser = u;
+          unsub();
+          resolve();
+        });
+        setTimeout(resolve, 1000);
+      });
+      if (!currentUser) {
+        window.location.href = 'login.html';
+        return;
+      }
     }
 
     const userDoc = await getDoc(doc(db, "users", currentUser.uid));
