@@ -14,11 +14,13 @@ let adminData = null;
 async function checkAdminAuth() {
   try {
     console.log('admin: checkAdminAuth start, waiting authInit...');
+    if (window.appendAuthDebug) window.appendAuthDebug('admin: checkAdminAuth start');
     // Wait for Firebase auth initialization
     await authInitPromise;
 
     currentAdmin = auth.currentUser;
     console.log('admin: currentAdmin after init', currentAdmin && currentAdmin.uid);
+    if (window.appendAuthDebug) window.appendAuthDebug('admin: currentAdmin after init: ' + (currentAdmin && currentAdmin.uid));
 
     // If no currentAdmin, wait briefly for any incoming auth state
     if (!currentAdmin) {
@@ -43,12 +45,14 @@ async function checkAdminAuth() {
         const lastJustRedirect = parseInt(sessionStorage.getItem('justAdminRedirect') || '0', 10);
         if (Date.now() - lastJustRedirect < 3000) {
           console.warn('admin: recent justAdminRedirect found, waiting briefly before final redirect');
+          if (window.appendAuthDebug) window.appendAuthDebug('admin: recent justAdminRedirect detected, sleeping briefly');
           await new Promise(r => setTimeout(r, 1200));
           currentAdmin = auth.currentUser;
         }
 
         if (!currentAdmin) {
           // Final check failed, redirect to login-admin
+          if (window.appendAuthDebug) window.appendAuthDebug('admin: final no-currentAdmin, redirecting to login-admin');
           window.location.href = 'login-admin.html';
           return;
         }
@@ -63,6 +67,7 @@ async function checkAdminAuth() {
       if (!adminData.isAdmin && adminData.role !== 'admin') {
         // mark last admin signout to avoid immediate redirect loops
         try { sessionStorage.setItem('lastAdminSignout', Date.now().toString()); } catch (e) {}
+        if (window.appendAuthDebug) window.appendAuthDebug('admin: signing out non-admin user: ' + currentAdmin.uid);
         await signOut(auth);
         window.location.href = 'login-admin.html';
         return;

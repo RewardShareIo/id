@@ -30,6 +30,7 @@ async function adminLogin() {
       if (userData.role === 'admin' || userData.isAdmin === true) {
         // Redirect ke admin panel
         try { sessionStorage.setItem('justAdminRedirect', Date.now().toString()); } catch (e) {}
+        if (window.appendAuthDebug) window.appendAuthDebug('adminLogin: redirecting to admin.html, uid=' + (user && user.uid));
         window.location.href = 'admin.html';
       } else {
         await auth.signOut();
@@ -61,6 +62,8 @@ auth.onAuthStateChanged(async (user) => {
   // Wait for Firebase auth to initialize to avoid acting on intermediate states
   await authInitPromise;
 
+  if (window.appendAuthDebug) window.appendAuthDebug('login-admin:onAuthStateChanged user=' + (user ? user.uid : 'null'));
+
   // If we were recently signed out by admin check, do not automatically redirect to admin immediately
   const lastAdminSignout = parseInt(sessionStorage.getItem('lastAdminSignout') || '0', 10);
   const now = Date.now();
@@ -74,9 +77,12 @@ auth.onAuthStateChanged(async (user) => {
         if (userData.role === 'admin' || userData.isAdmin === true) {
           // Only redirect if we weren't just signed out by the admin check (avoid loops)
           if (now - lastAdminSignout > skipRedirectWindow) {
+            try { sessionStorage.setItem('justAdminRedirect', Date.now().toString()); } catch (e) {}
+            if (window.appendAuthDebug) window.appendAuthDebug('login-admin: redirecting to admin.html user=' + user.uid);
             window.location.href = 'admin.html';
           } else {
             console.warn('Skipping immediate admin redirect due to recent signout');
+            if (window.appendAuthDebug) window.appendAuthDebug('login-admin: skipping redirect due to recent signout');
           }
         }
       }

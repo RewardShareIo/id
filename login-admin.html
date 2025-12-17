@@ -112,6 +112,56 @@
   </div>
 </div>
 
+<!-- AUTH DEBUG PANEL (TEMPORARY) -->
+<style>
+  .auth-debug { position: fixed; right: 12px; bottom: 12px; width: 320px; max-height: 420px; background: rgba(0,0,0,0.8); color: #fff; border-radius: 8px; overflow: hidden; font-family: monospace; z-index: 9999; }
+  .auth-debug .header { display:flex; justify-content:space-between; align-items:center; padding:8px 10px; background: rgba(255,255,255,0.04); }
+  .auth-debug button { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.06); padding: 4px 8px; border-radius: 6px; cursor:pointer; }
+  .auth-debug .content { padding:10px; font-size:12px; max-height: 340px; overflow:auto; }
+  .auth-debug .field { margin-bottom:8px; }
+  .auth-debug pre { background: rgba(255,255,255,0.02); padding:8px; border-radius:4px; max-height:160px; overflow:auto; }
+</style>
+<div class="auth-debug" id="authDebug" aria-hidden="false">
+  <div class="header">
+    <div style="font-weight:bold;">Auth Debug</div>
+    <div>
+      <button id="authDebugRefresh">Refresh</button>
+      <button id="authDebugClear">Clear</button>
+    </div>
+  </div>
+  <div class="content" id="authDebugContent">
+    <div class="field"><strong>UID:</strong> <span id="dbgUid">-</span></div>
+    <div class="field"><strong>justAdminRedirect:</strong> <span id="dbgJustRedirect">-</span></div>
+    <div class="field"><strong>lastAdminSignout:</strong> <span id="dbgLastSignout">-</span></div>
+    <div class="field"><strong>Event Log:</strong></div>
+    <pre id="dbgLog">(log empty)</pre>
+  </div>
+</div>
+
+<script>
+  window.appendAuthDebug = function(msg) {
+    try {
+      const el = document.getElementById('dbgLog');
+      if (!el) return;
+      const t = new Date().toISOString() + ' - ' + msg;
+      if (el.textContent === '(log empty)') el.textContent = t; else el.textContent = t + '\n' + el.textContent;
+    } catch (e) { console.error('appendAuthDebug failed', e); }
+  };
+  window.updateAuthDebug = function() {
+    try {
+      const uid = (window.firebase && window.firebase.auth && window.firebase.auth().currentUser) ? window.firebase.auth().currentUser.uid : (window.auth && window.auth.currentUser ? window.auth.currentUser.uid : null);
+      document.getElementById('dbgUid').textContent = uid || '-';
+      document.getElementById('dbgJustRedirect').textContent = sessionStorage.getItem('justAdminRedirect') || '-';
+      document.getElementById('dbgLastSignout').textContent = sessionStorage.getItem('lastAdminSignout') || '-';
+    } catch (e) { console.error('updateAuthDebug failed', e); }
+  };
+  document.getElementById('authDebugRefresh').addEventListener('click', () => { window.updateAuthDebug(); appendAuthDebug('manual refresh'); });
+  document.getElementById('authDebugClear').addEventListener('click', () => { document.getElementById('dbgLog').textContent = '(log empty)'; });
+  // auto-refresh periodically
+  setInterval(window.updateAuthDebug, 2000);
+  window.updateAuthDebug();
+</script>
+
 <!-- SCRIPTS -->
 <script type="module" src="login-admin.js"></script>
 </body>
